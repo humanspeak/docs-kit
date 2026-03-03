@@ -3,7 +3,7 @@ import path from 'path'
 
 import { normalizeDimensionsForSatori } from '@humanspeak/svelte-satori-fix'
 import { Resvg } from '@resvg/resvg-js'
-import satori from 'satori'
+import satori, { type Font } from 'satori'
 import { html as toReactNode } from 'satori-html'
 
 const CONCURRENCY = 8
@@ -58,8 +58,15 @@ function buildOgHtml(opts: {
     humanspeakSvgDataUri: string
     svelteSvgDataUri: string
 }): string {
-    const { type, title, description, features, npmPackage, humanspeakSvgDataUri, svelteSvgDataUri } =
-        opts
+    const {
+        type,
+        title,
+        description,
+        features,
+        npmPackage,
+        humanspeakSvgDataUri,
+        svelteSvgDataUri
+    } = opts
     const dims = CARD_DIMENSIONS[type]
     const titleFontSize = type === 'og' ? '6rem' : '4.5rem'
     const descFontSize = type === 'og' ? '2.25rem' : '1.875rem'
@@ -151,7 +158,7 @@ async function discoverPages(routesDir: string): Promise<PageSeoData[]> {
 
 async function generateCard(
     task: CardTask,
-    fonts: satori.Font[],
+    fonts: Font[],
     npmPackage: string,
     humanspeakSvgDataUri: string,
     svelteSvgDataUri: string,
@@ -186,14 +193,8 @@ async function generateCard(
 // ---------- main ----------
 
 export async function generateSocialCards(options: GenerateSocialCardsOptions) {
-    const {
-        npmPackage,
-        defaultTitle,
-        defaultDescription,
-        defaultFeatures,
-        rootDir,
-        fontsDir
-    } = options
+    const { npmPackage, defaultTitle, defaultDescription, defaultFeatures, rootDir, fontsDir } =
+        options
     const startTime = Date.now()
 
     // Load fonts
@@ -203,7 +204,7 @@ export async function generateSocialCards(options: GenerateSocialCardsOptions) {
         fs.readFile(path.join(fontsDir, 'lato/Lato-ExtraBoldItalic.ttf'))
     ])
 
-    const fonts: satori.Font[] = [
+    const fonts: Font[] = [
         { name: 'lato', data: latoRegular, style: 'normal' },
         { name: 'lato-extrabold', data: latoExtraBold, style: 'normal' },
         { name: 'lato-extrabolditalic', data: latoExtraBoldItalic, style: 'italic' }
