@@ -66,9 +66,7 @@
         "@eslint/compat": "^2.0.2",
         "@eslint/js": "^10.0.1",
         "@humanspeak/svelte-motion": "^0.1.27",
-        "@humanspeak/svelte-satori-fix": "^0.0.3",
         "@lucide/svelte": "^0.576.0",
-        "@resvg/resvg-js": "^2.6.2",
         "@sentry/sveltekit": "^9.31.0",
         "@sveltejs/adapter-auto": "^6.0.0",
         "@sveltejs/kit": "^2.53.3",
@@ -85,8 +83,6 @@
         "prettier": "^3.8.1",
         "prettier-plugin-organize-imports": "^4.3.0",
         "prettier-plugin-svelte": "^3.5.0",
-        "satori": "^0.19.2",
-        "satori-html": "^0.3.2",
         "svelte": "^5.53.5",
         "svelte-check": "^4.4.4",
         "typescript": "^5.9.3",
@@ -97,8 +93,12 @@
         "node": "24.13.0"
     },
     "dependencies": {
+        "@humanspeak/svelte-satori-fix": "^0.0.3",
+        "@resvg/resvg-js": "^2.6.2",
         "bits-ui": "^2.16.2",
         "clsx": "^2.1.1",
+        "satori": "^0.24.1",
+        "satori-html": "^0.3.2",
         "tailwind-merge": "^3.5.0"
     }
 }
