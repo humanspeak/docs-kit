@@ -1,0 +1,10 @@
+/*
+ * @humanspeak/docs-kit — convenience barrel import
+ *
+ * Import this single file to get fonts + theme + prose:
+ *   @import '@humanspeak/docs-kit/styles/base.css';
+ */
+
+@import './fonts.css';
+@import './theme.css';
+@import './prose.css';
