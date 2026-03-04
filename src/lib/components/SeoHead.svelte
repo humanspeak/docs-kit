@@ -3,7 +3,11 @@
     import type { DocsKitConfig } from '../config.js'
     import type { SeoContext } from '../contexts/seo.js'
 
-    const { seo, config } = $props<{ seo: SeoContext; config: DocsKitConfig }>()
+    const { seo, config, favicon } = $props<{
+        seo: SeoContext
+        config: DocsKitConfig
+        favicon?: string
+    }>()
 
     const canonicalUrl = $derived(`${$page.url.origin}${$page.url.pathname}`)
     const resolvedTitle = $derived(seo.title)
@@ -36,6 +40,9 @@
 
 <svelte:head>
     <title>{resolvedTitle}</title>
+    {#if favicon}
+        <link rel="icon" href={favicon} />
+    {/if}
     <meta name="description" content={resolvedDescription} />
     <link rel="canonical" href={canonicalUrl} />
     <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM-optimized content" />
