@@ -97,8 +97,8 @@
                             transition={springFast}
                         >
                             {#if section.icon}
-                                <svelte:component
-                                    this={section.icon}
+                                {@const SectionIcon = section.icon}
+                                <SectionIcon
                                     size={14}
                                     class="text-muted-foreground"
                                 />
@@ -140,8 +140,8 @@
                                             whileHover={hoverScale}
                                             transition={springFast}
                                         >
-                                            <svelte:component
-                                                this={item.icon}
+                                            {@const ItemIcon = item.icon}
+                                            <ItemIcon
                                                 size={14}
                                                 class={isActivePath(item.href, currentPath, item.exact)
                                                     ? 'text-accent-foreground'
