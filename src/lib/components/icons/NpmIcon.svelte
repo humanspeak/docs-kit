@@ -1,13 +1,14 @@
 <!--
-    npm mark — from Simple Icons (https://simpleicons.org)
-    License: CC0 1.0 Universal (public domain)
+    npm mark — Font Awesome Free 7.2.0 by @fontawesome
+    License: https://fontawesome.com/license/free
+    Copyright 2026 Fonticons, Inc.
 -->
 <script lang="ts">
     const { class: className = '' }: { class?: string } = $props()
 </script>
 
-<svg class={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+<svg class={className} viewBox="0 0 640 640" fill="currentColor" aria-hidden="true">
     <path
-        d="M1.763 0C.786 0 0 .786 0 1.763v20.474C0 23.214.786 24 1.763 24h20.474c.977 0 1.763-.786 1.763-1.763V1.763C24 .786 23.214 0 22.237 0zM5.13 5.323l13.837.019-.009 13.836h-3.464l.01-10.382h-3.456L12.04 19.17H5.113z"
+        d="M320 352L288 352L288 288L320 288L320 352zM608 224L608 416L320 416L320 448L192 448L192 416L32 416L32 224L608 224zM192 256L64 256L64 384L128 384L128 288L160 288L160 384L192 384L192 256zM352 256L224 256L224 416L288 416L288 384L352 384L352 256zM576 256L384 256L384 384L448 384L448 288L480 288L480 384L512 384L512 288L544 288L544 384L576 384L576 256z"
     />
 </svg>
