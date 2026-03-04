@@ -97,6 +97,7 @@
         "@resvg/resvg-js": "^2.6.2",
         "bits-ui": "^2.16.2",
         "clsx": "^2.1.1",
+        "runed": "^0.37.1",
         "satori": "^0.24.1",
         "satori-html": "^0.3.2",
         "tailwind-merge": "^3.5.0"
