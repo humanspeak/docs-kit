@@ -37,8 +37,12 @@
         loveAndRespect?: NavItem[]
     } = $props()
 
+    // Destructure slug eagerly to avoid state_referenced_locally warning
+    // (config won't change during the component's lifetime)
+    const { slug } = config
+
     const openSections = new PersistedState<Record<string, boolean>>(
-        `${config.slug}-sidebar-sections`,
+        `${slug}-sidebar-sections`,
         {}
     )
 
