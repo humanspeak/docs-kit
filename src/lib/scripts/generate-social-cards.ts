@@ -43,8 +43,8 @@ export interface GenerateSocialCardsOptions {
     defaultFeatures: string[]
     /** Root directory of the docs project (where src/ and static/ live) */
     rootDir: string
-    /** Path to fonts directory containing lato/*.ttf */
-    fontsDir: string
+    /** @deprecated Fonts are now resolved from docs-kit's own package. This option is ignored. */
+    fontsDir?: string
 }
 
 // ---------- HTML template (mirrors OG.svelte output) ----------
@@ -192,12 +192,19 @@ async function generateCard(
 
 // ---------- main ----------
 
+/** Resolve the fonts directory bundled with @humanspeak/docs-kit */
+function resolvePackageFontsDir(): string {
+    const thisFile = new URL(import.meta.url).pathname
+    // In dist: dist/scripts/generate-social-cards.js → dist/fonts/
+    return path.join(path.dirname(thisFile), '..', 'fonts')
+}
+
 export async function generateSocialCards(options: GenerateSocialCardsOptions) {
-    const { npmPackage, defaultTitle, defaultDescription, defaultFeatures, rootDir, fontsDir } =
-        options
+    const { npmPackage, defaultTitle, defaultDescription, defaultFeatures, rootDir } = options
     const startTime = Date.now()
 
-    // Load fonts
+    // Load fonts from the package's own bundled font files
+    const fontsDir = resolvePackageFontsDir()
     const [latoRegular, latoExtraBold, latoExtraBoldItalic] = await Promise.all([
         fs.readFile(path.join(fontsDir, 'lato/Lato-Regular.ttf')),
         fs.readFile(path.join(fontsDir, 'lato/Lato-ExtraBold.ttf')),
