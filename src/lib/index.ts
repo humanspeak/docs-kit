@@ -9,6 +9,14 @@ export { default as Header } from './components/Header.svelte'
 export { default as OG } from './components/OG.svelte'
 export { default as SeoContextProvider } from './components/SeoContextProvider.svelte'
 export { default as SeoHead } from './components/SeoHead.svelte'
+export { default as ThemeToggle } from './components/ThemeToggle.svelte'
+
+// Icons (brand icons only — use @lucide/svelte for UI icons)
+export { default as GitHubIcon } from './components/icons/GitHubIcon.svelte'
+export { default as NpmIcon } from './components/icons/NpmIcon.svelte'
+
+// Utilities
+export { cn } from './utils/shadcn.js'
 
 // Contexts
 export {

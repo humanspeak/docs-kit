@@ -1,25 +1,23 @@
 <script lang="ts">
     import { resolve } from '$app/paths'
-    import { SiGithub, SiNpm } from '@icons-pack/svelte-simple-icons'
-    import { ChevronRight, Moon, Sun } from '@lucide/svelte'
     import { motion } from '@humanspeak/svelte-motion'
-    import { mode, setMode } from 'mode-watcher'
+    import ChevronRightIcon from '@lucide/svelte/icons/chevron-right'
     import type { DocsKitConfig } from '../config.js'
     import { getBreadcrumbContext } from '../contexts/breadcrumb.js'
+    import GitHubIcon from './icons/GitHubIcon.svelte'
+    import NpmIcon from './icons/NpmIcon.svelte'
+    import ThemeToggle from './ThemeToggle.svelte'
 
     const { config, favicon } = $props<{ config: DocsKitConfig; favicon: string }>()
 
     const breadcrumbContext = getBreadcrumbContext()
 
-    const changeMode = () => {
-        if (mode.current === 'dark') {
-            setMode('light')
-        } else {
-            setMode('dark')
-        }
-    }
+    const EMPTY_BREADCRUMBS: readonly import('../contexts/breadcrumb.js').Breadcrumb[] = []
+    const breadcrumbs = $derived(breadcrumbContext?.breadcrumbs ?? EMPTY_BREADCRUMBS)
 
-    const breadcrumbs = $derived(breadcrumbContext?.breadcrumbs ?? [])
+    const tapScale = { scale: 0.9 }
+    const hoverScaleLogo = { scale: 1.1 }
+    const hoverScaleIcon = { scale: 1.05 }
 </script>
 
 <div>
@@ -36,8 +34,8 @@
                     src={favicon}
                     alt="logo"
                     class="h-6 w-6 rounded-md"
-                    whileTap={{ scale: 0.9 }}
-                    whileHover={{ scale: 1.1 }}
+                    whileTap={tapScale}
+                    whileHover={hoverScaleLogo}
                 />
             </a>
             {#if breadcrumbContext && breadcrumbs.length > 0}
@@ -45,16 +43,18 @@
                     <ol class="flex items-center space-x-2 text-sm">
                         {#each breadcrumbs as crumb, index (index)}
                             <li>
-                                <ChevronRight class="text-muted-foreground size-3" />
+                                <ChevronRightIcon class="text-muted-foreground" size={12} />
                             </li>
                             <li class="flex items-center">
-                                {#if index === breadcrumbs.length - 1 || !crumb.href}
+                                {#if index === breadcrumbs.length - 1}
                                     <span
-                                        class="text-foreground {crumb.href
-                                            ? 'text-muted-foreground'
-                                            : 'font-medium'}"
+                                        class="font-medium text-foreground"
                                         aria-current="page"
                                     >
+                                        {crumb.title}
+                                    </span>
+                                {:else if !crumb.href}
+                                    <span class="text-muted-foreground">
                                         {crumb.title}
                                     </span>
                                 {:else}
@@ -72,18 +72,7 @@
             {/if}
         </div>
         <div class="flex items-center gap-4">
-            <motion.button
-                onclick={changeMode}
-                whileTap={{ scale: 0.9 }}
-                whileHover={{ scale: 1.1 }}
-                class="inline-flex size-6 items-center justify-center rounded-full border border-border-muted text-text-muted transition-colors hover:border-border-mid hover:text-text-secondary"
-            >
-                {#if mode.current === 'dark'}
-                    <Sun class="size-3.5 transition-all" />
-                {:else}
-                    <Moon class="size-3.5 transition-all" />
-                {/if}
-            </motion.button>
+            <ThemeToggle />
 
             <a
                 href="https://github.com/{config.repo}"
@@ -94,10 +83,10 @@
             >
                 <motion.div
                     class="inline-flex size-6 items-center justify-center rounded-full border border-border-muted transition-colors hover:border-border-mid"
-                    whileTap={{ scale: 0.9 }}
-                    whileHover={{ scale: 1.05 }}
+                    whileTap={tapScale}
+                    whileHover={hoverScaleIcon}
                 >
-                    <SiGithub class="size-3.5" />
+                    <GitHubIcon class="size-3.5" />
                 </motion.div>
             </a>
             <a
@@ -109,10 +98,10 @@
             >
                 <motion.div
                     class="inline-flex size-6 items-center justify-center rounded-full border border-border-muted transition-colors hover:border-border-mid"
-                    whileTap={{ scale: 0.9 }}
-                    whileHover={{ scale: 1.05 }}
+                    whileTap={tapScale}
+                    whileHover={hoverScaleIcon}
                 >
-                    <SiNpm class="size-3.5" />
+                    <NpmIcon class="size-3.5" />
                 </motion.div>
             </a>
         </div>
