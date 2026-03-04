@@ -39,7 +39,11 @@
             "types": "./dist/actions/index.d.ts",
             "default": "./dist/actions/index.js"
         },
-        "./fonts/*": "./dist/fonts/*"
+        "./fonts/*": "./dist/fonts/*",
+        "./styles/base.css": "./dist/styles/base.css",
+        "./styles/fonts.css": "./dist/styles/fonts.css",
+        "./styles/prose.css": "./dist/styles/prose.css",
+        "./styles/theme.css": "./dist/styles/theme.css"
     },
     "files": [
         "dist",
@@ -48,7 +52,9 @@
     ],
     "peerDependencies": {
         "@humanspeak/svelte-motion": ">=0.1.0",
+        "@lucide/svelte": ">=0.400.0",
         "@sveltejs/kit": "^2.0.0",
+        "mode-watcher": "^1.0.0",
         "svelte": "^5.0.0"
     },
     "peerDependenciesMeta": {
@@ -61,8 +67,7 @@
         "@eslint/js": "^10.0.1",
         "@humanspeak/svelte-motion": "^0.1.27",
         "@humanspeak/svelte-satori-fix": "^0.0.3",
-        "@icons-pack/svelte-simple-icons": "^7.1.0",
-        "@lucide/svelte": "^0.575.0",
+        "@lucide/svelte": "^0.576.0",
         "@resvg/resvg-js": "^2.6.2",
         "@sentry/sveltekit": "^9.31.0",
         "@sveltejs/adapter-auto": "^6.0.0",
@@ -90,5 +95,10 @@
     },
     "volta": {
         "node": "24.13.0"
+    },
+    "dependencies": {
+        "bits-ui": "^2.16.2",
+        "clsx": "^2.1.1",
+        "tailwind-merge": "^3.5.0"
     }
 }
