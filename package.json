@@ -40,6 +40,7 @@
             "default": "./dist/actions/index.js"
         },
         "./fonts/*": "./dist/fonts/*",
+        "./assets/*": "./dist/assets/*",
         "./styles/base.css": "./dist/styles/base.css",
         "./styles/fonts.css": "./dist/styles/fonts.css",
         "./styles/prose.css": "./dist/styles/prose.css",

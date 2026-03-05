@@ -199,6 +199,12 @@ function resolvePackageFontsDir(): string {
     return path.join(path.dirname(thisFile), '..', 'fonts')
 }
 
+/** Resolve the SVG assets directory bundled with @humanspeak/docs-kit */
+function resolvePackageSvgDir(): string {
+    const thisFile = new URL(import.meta.url).pathname
+    return path.join(path.dirname(thisFile), '..', 'assets', 'svg')
+}
+
 export async function generateSocialCards(options: GenerateSocialCardsOptions) {
     const { npmPackage, defaultTitle, defaultDescription, defaultFeatures, rootDir } = options
     const startTime = Date.now()
@@ -218,9 +224,10 @@ export async function generateSocialCards(options: GenerateSocialCardsOptions) {
     ]
 
     // Load SVGs as data URIs for satori image embedding
+    const svgDir = resolvePackageSvgDir()
     const [humanspeakSvg, svelteSvg] = await Promise.all([
-        fs.readFile(path.join(rootDir, 'static/humanspeak-dark.svg')),
-        fs.readFile(path.join(rootDir, 'static/svelte-logo.svg'))
+        fs.readFile(path.join(svgDir, 'humanspeak-dark.svg')),
+        fs.readFile(path.join(svgDir, 'svelte-logo.svg'))
     ])
     const humanspeakSvgDataUri = `data:image/svg+xml;base64,${humanspeakSvg.toString('base64')}`
     const svelteSvgDataUri = `data:image/svg+xml;base64,${svelteSvg.toString('base64')}`
