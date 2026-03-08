@@ -10,8 +10,18 @@
     }>()
 
     const canonicalUrl = $derived(`${$page.url.origin}${$page.url.pathname}`)
-    const resolvedTitle = $derived(seo.title)
-    const resolvedDescription = $derived(seo.description || config.description)
+    const pageTitle = $derived($page.data?.title as string | undefined)
+    const pageDesc = $derived($page.data?.description as string | undefined)
+
+    const resolvedTitle = $derived(
+        seo.title
+            ?? (pageTitle
+                ? (pageTitle.includes(config.name) ? pageTitle : `${pageTitle} | ${config.name}`)
+                : config.name)
+    )
+    const resolvedDescription = $derived(
+        seo.description ?? pageDesc ?? config.description
+    )
     const ogImageUrl = $derived(
         seo.ogSlug
             ? `${$page.url.origin}/social-cards/og-${seo.ogSlug}.png`
