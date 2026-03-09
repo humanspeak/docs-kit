@@ -101,6 +101,7 @@
         "runed": "^0.37.1",
         "satori": "^0.24.1",
         "satori-html": "^0.3.2",
+        "github-slugger": "^2.0.0",
         "tailwind-merge": "^3.5.0"
     }
 }

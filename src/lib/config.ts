@@ -17,4 +17,8 @@ export interface DocsKitConfig {
     defaultFeatures: string[]
     /** Fallback star count when GitHub API is unavailable */
     fallbackStars: number
+    /** Software requirements for JSON-LD (defaults to 'Svelte 5') */
+    softwareRequirements?: string
+    /** Programming languages for JSON-LD */
+    programmingLanguages?: string[]
 }
