@@ -2,19 +2,20 @@ import { createHash } from 'crypto'
 
 import type { Handle } from '@sveltejs/kit'
 
-const JSON_LD_REGEX = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g
+// Matches inline <script> tags (with or without attributes, but NOT those with src="...")
+const INLINE_SCRIPT_REGEX = /<script(?![^>]*\bsrc\s*=)[^>]*>([\s\S]*?)<\/script>/g
 
 /**
- * Creates a handle that computes SHA-256 hashes for JSON-LD scripts
- * and appends them to the CSP script-src directive.
+ * Creates a handle that computes SHA-256 hashes for all inline scripts
+ * and appends any missing hashes to the CSP script-src directive.
  *
- * SvelteKit's CSP hash mode cannot auto-hash {@html} content,
- * so this post-processes the response to add the hashes dynamically.
- *
- * Place first in sequence() so it wraps the full pipeline.
+ * SvelteKit's CSP hash mode auto-hashes scripts it controls, but cannot
+ * hash {@html}-injected scripts (JSON-LD, ModeWatcher, etc.). This handle
+ * post-processes the response to find and hash all inline scripts, then
+ * adds any hashes not already present in the CSP header.
  *
  * Note: Disables response streaming for HTML pages with CSP headers
- * (must read full body to find JSON-LD blocks).
+ * (must read full body to find inline scripts).
  */
 export const createJsonLdCspHandle = (): Handle => {
     return async ({ event, resolve }) => {
@@ -28,14 +29,19 @@ export const createJsonLdCspHandle = (): Handle => {
 
         const html = await response.text()
 
-        const hashes = Array.from(html.matchAll(JSON_LD_REGEX), ([, content]) => {
-            const hash = createHash('sha256').update(content).digest('base64')
-            return `'sha256-${hash}'`
-        })
+        // Compute hashes for all inline scripts, keep only those not already in the CSP
+        const newHashes: string[] = []
+        for (const [, content] of html.matchAll(INLINE_SCRIPT_REGEX)) {
+            if (!content.trim()) continue
+            const hash = `'sha256-${createHash('sha256').update(content).digest('base64')}'`
+            if (!csp.includes(hash)) {
+                newHashes.push(hash)
+            }
+        }
 
-        if (hashes.length === 0) return new Response(html, response)
+        if (newHashes.length === 0) return new Response(html, response)
 
-        const newCsp = csp.replace(/script-src(?!-)([^;]*)/, `script-src$1 ${hashes.join(' ')}`)
+        const newCsp = csp.replace(/script-src(?!-)([^;]*)/, `script-src$1 ${newHashes.join(' ')}`)
         const newHeaders = new Headers(response.headers)
         newHeaders.set('content-security-policy', newCsp)
 
