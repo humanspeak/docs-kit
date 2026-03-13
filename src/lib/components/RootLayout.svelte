@@ -84,11 +84,11 @@
 
 <ModeWatcher />
 <SeoContextProvider {seo}>
-    <SeoHead {seo} {config} {favicon} />
     <BreadcrumbContextProvider>
-        <BreadcrumbJsonLd {config} />
         <MotionConfig transition={{ duration: 0.5 }}>
             {@render children()}
         </MotionConfig>
+        <BreadcrumbJsonLd {config} />
     </BreadcrumbContextProvider>
+    <SeoHead {seo} {config} {favicon} />
 </SeoContextProvider>
