@@ -45,6 +45,8 @@ export interface GenerateSocialCardsOptions {
     rootDir: string
     /** @deprecated Fonts are now resolved from docs-kit's own package. This option is ignored. */
     fontsDir?: string
+    /** Optional path to blog content directory (e.g. 'src/content/blog'). Enables OG cards for blog posts. */
+    blogContentDir?: string
 }
 
 // ---------- HTML template (mirrors OG.svelte output) ----------
@@ -190,6 +192,36 @@ async function generateCard(
     await fs.writeFile(path.join(outDir, task.filename), png)
 }
 
+// ---------- discover blog posts ----------
+
+async function discoverBlogPosts(blogContentDir: string): Promise<PageSeoData[]> {
+    const pages: PageSeoData[] = []
+
+    try {
+        const entries = await fs.readdir(blogContentDir, { withFileTypes: true })
+        // Dynamic import to avoid requiring gray-matter when blog is not used
+        const matter = (await import('gray-matter')).default
+
+        for (const entry of entries) {
+            if (!entry.isFile() || !entry.name.endsWith('.md')) continue
+            const slug = entry.name.replace(/\.md$/, '')
+            const content = await fs.readFile(path.join(blogContentDir, entry.name), 'utf-8')
+            const { data } = matter(content)
+
+            pages.push({
+                ogSlug: data.ogSlug ?? `blog-${slug}`,
+                ogTitle: data.title ?? slug,
+                ogTagline: data.description ?? '',
+                ogFeatures: Array.isArray(data.tags) ? data.tags.slice(0, 4).map(String) : []
+            })
+        }
+    } catch {
+        // Directory doesn't exist or can't be read — skip silently
+    }
+
+    return pages
+}
+
 // ---------- main ----------
 
 /** Resolve the fonts directory bundled with @humanspeak/docs-kit */
@@ -206,7 +238,14 @@ function resolvePackageSvgDir(): string {
 }
 
 export async function generateSocialCards(options: GenerateSocialCardsOptions) {
-    const { npmPackage, defaultTitle, defaultDescription, defaultFeatures, rootDir } = options
+    const {
+        npmPackage,
+        defaultTitle,
+        defaultDescription,
+        defaultFeatures,
+        rootDir,
+        blogContentDir
+    } = options
     const startTime = Date.now()
 
     // Load fonts from the package's own bundled font files
@@ -235,7 +274,15 @@ export async function generateSocialCards(options: GenerateSocialCardsOptions) {
     // Discover pages with SEO data
     const routesDir = path.join(rootDir, 'src/routes')
     const pages = await discoverPages(routesDir)
-    console.log(`Found ${pages.length} pages with social card data`)
+
+    // Discover blog posts if content directory is provided
+    const blogDir = blogContentDir ? path.join(rootDir, blogContentDir) : null
+    const blogPages = blogDir ? await discoverBlogPosts(blogDir) : []
+    const allPages = [...pages, ...blogPages]
+
+    console.log(
+        `Found ${pages.length} pages + ${blogPages.length} blog posts with social card data`
+    )
 
     // Build task list
     const tasks: CardTask[] = []
@@ -253,7 +300,7 @@ export async function generateSocialCards(options: GenerateSocialCardsOptions) {
     }
 
     // Per-page images
-    for (const page of pages) {
+    for (const page of allPages) {
         for (const type of ['og', 'twitter'] as CardType[]) {
             tasks.push({
                 type,

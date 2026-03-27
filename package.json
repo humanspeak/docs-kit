@@ -39,6 +39,11 @@
             "types": "./dist/actions/index.d.ts",
             "default": "./dist/actions/index.js"
         },
+        "./blog": {
+            "types": "./dist/blog/index.d.ts",
+            "svelte": "./dist/blog/index.js",
+            "default": "./dist/blog/index.js"
+        },
         "./fonts/*": "./dist/fonts/*",
         "./assets/*": "./dist/assets/*",
         "./styles/base.css": "./dist/styles/base.css",
@@ -52,6 +57,7 @@
         "!dist/**/*.spec.*"
     ],
     "peerDependencies": {
+        "@humanspeak/svelte-markdown": ">=1.0.0",
         "@humanspeak/svelte-motion": ">=0.1.0",
         "@lucide/svelte": ">=0.400.0",
         "@sveltejs/kit": "^2.0.0",
@@ -59,6 +65,9 @@
         "svelte": "^5.0.0"
     },
     "peerDependenciesMeta": {
+        "@humanspeak/svelte-markdown": {
+            "optional": true
+        },
         "@humanspeak/svelte-motion": {
             "optional": false
         }
@@ -66,6 +75,7 @@
     "devDependencies": {
         "@eslint/compat": "^2.0.2",
         "@eslint/js": "^10.0.1",
+        "@humanspeak/svelte-markdown": "^1.2.0",
         "@humanspeak/svelte-motion": "^0.1.27",
         "@lucide/svelte": "^0.576.0",
         "@sentry/sveltekit": "^9.31.0",
@@ -98,10 +108,11 @@
         "@resvg/resvg-js": "^2.6.2",
         "bits-ui": "^2.16.2",
         "clsx": "^2.1.1",
+        "github-slugger": "^2.0.0",
+        "gray-matter": "^4.0.3",
         "runed": "^0.37.1",
         "satori": "^0.24.1",
         "satori-html": "^0.3.2",
-        "github-slugger": "^2.0.0",
         "tailwind-merge": "^3.5.0"
     }
 }

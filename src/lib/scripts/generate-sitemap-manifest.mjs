@@ -1,7 +1,9 @@
+import { existsSync } from 'node:fs'
 import { readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { join, resolve as resolvePath } from 'node:path'
 
 const ROOT = resolvePath(process.cwd(), 'src', 'routes')
+const BLOG_CONTENT_DIR = resolvePath(process.cwd(), 'src', 'content', 'blog')
 
 /** Convert a +page file path to a route path */
 function toRoutePath(file) {
@@ -124,6 +126,24 @@ async function main() {
         const route = toRoutePath(file)
         if (route.startsWith('/social-cards')) continue
         manifest[route] = new Date(s.mtimeMs).toISOString().slice(0, 10)
+    }
+
+    // Discover blog posts and add to manifest
+    if (existsSync(BLOG_CONTENT_DIR)) {
+        const blogEntries = await readdir(BLOG_CONTENT_DIR, { withFileTypes: true })
+        let blogCount = 0
+        for (const entry of blogEntries) {
+            if (!entry.isFile() || !entry.name.endsWith('.md')) continue
+            const slug = entry.name.replace(/\.md$/, '')
+            const s = await stat(join(BLOG_CONTENT_DIR, entry.name))
+            manifest[`/blog/${slug}`] = new Date(s.mtimeMs).toISOString().slice(0, 10)
+            blogCount++
+        }
+        if (blogCount > 0) {
+            // Add the blog index page too
+            manifest['/blog'] = new Date().toISOString().slice(0, 10)
+            console.log(`Added ${blogCount} blog posts + index to sitemap`)
+        }
     }
 
     const dest = resolvePath(process.cwd(), 'src', 'lib', 'sitemap-manifest.json')

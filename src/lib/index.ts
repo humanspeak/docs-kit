@@ -41,3 +41,6 @@ export { getSeoContext, setSeoContext, type SeoContext } from './contexts/seo.js
 
 // Actions
 export { enhanceCodeBlocks } from './actions/enhanceCodeBlocks.js'
+
+// Blog types (components and utilities available via '@humanspeak/docs-kit/blog')
+export type { BlogPostData, BlogPostMeta } from './types/blog.js'
