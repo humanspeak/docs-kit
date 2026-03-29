@@ -9,7 +9,12 @@ export { default as BlogPost } from '../components/BlogPost.svelte'
 export type { BlogPostData, BlogPostMeta } from '../types/blog.js'
 
 // Utilities
-export { filterByTag, getAllTags, loadBlogPosts, parseBlogPost } from '../utils/blog.js'
-export { highlightBlogPosts } from '../utils/highlight.js'
+export {
+    filterByTag,
+    getAllTags,
+    loadBlogPosts,
+    loadBlogPostsMdsvex,
+    parseBlogPost
+} from '../utils/blog.js'
 export { estimateReadingTime } from '../utils/reading-time.js'
 export { generateRssFeed } from '../utils/rss.js'

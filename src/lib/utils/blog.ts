@@ -2,6 +2,11 @@ import matter from 'gray-matter'
 import type { BlogPostData, BlogPostMeta } from '../types/blog.js'
 import { estimateReadingTime } from './reading-time.js'
 
+/** Shape of an mdsvex module returned by import.meta.glob on .svx files. */
+interface MdsvexModule {
+    metadata?: Record<string, unknown>
+}
+
 /**
  * Parses a raw markdown file (with YAML frontmatter) into structured blog post data.
  *
@@ -55,6 +60,57 @@ export const loadBlogPosts = (
 
         const post = parseBlogPost(slug, rawContent, includeDrafts)
         if (post) posts.push(post)
+    }
+
+    return posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+}
+
+/**
+ * Loads blog post metadata from mdsvex `.svx` route files.
+ *
+ * @param globResult - Result of `import.meta.glob('/src/routes/blog/&ast;/+page.svx', { eager: true })`.
+ * @param includeDrafts - Whether to include draft posts (defaults to false).
+ * @returns Array of blog post metadata sorted by date (newest first).
+ *
+ * @example
+ * ```ts
+ * const modules = import.meta.glob('/src/routes/blog/&#42;/+page.svx', { eager: true })
+ * const posts = loadBlogPostsMdsvex(modules)
+ * ```
+ */
+export const loadBlogPostsMdsvex = (
+    globResult: Record<string, MdsvexModule>,
+    includeDrafts = false
+): BlogPostMeta[] => {
+    const posts: BlogPostMeta[] = []
+
+    for (const [filepath, module] of Object.entries(globResult)) {
+        const data = module.metadata
+        if (!data) continue
+
+        const isDraft = data.draft === true
+        if (isDraft && !includeDrafts) continue
+
+        // Extract slug from route path: /src/routes/blog/my-post/+page.svx → my-post
+        const segments = filepath.split('/')
+        const slug = segments[segments.length - 2] ?? ''
+        if (!slug) continue
+
+        const description = String(data.description ?? '')
+
+        posts.push({
+            slug,
+            title: String(data.title ?? slug),
+            date: data.date instanceof Date ? data.date.toISOString() : String(data.date ?? ''),
+            description,
+            tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
+            author: String(data.author ?? 'Humanspeak'),
+            draft: isDraft || undefined,
+            readingTime: data.readingTime
+                ? Number(data.readingTime)
+                : estimateReadingTime(description),
+            ogSlug: String(data.ogSlug ?? `blog-${slug}`)
+        })
     }
 
     return posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
