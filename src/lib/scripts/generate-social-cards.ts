@@ -199,7 +199,8 @@ async function discoverBlogPosts(blogContentDir: string): Promise<PageSeoData[]>
 
     try {
         const entries = await fs.readdir(blogContentDir, { withFileTypes: true })
-        // Dynamic import to avoid requiring gray-matter when blog is not used
+        // Dynamic import — gray-matter is optional (only needed for raw .md blog posts)
+        // @ts-ignore gray-matter may not be installed
         const matter = (await import('gray-matter')).default
 
         for (const entry of entries) {

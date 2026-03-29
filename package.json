@@ -110,7 +110,6 @@
         "bits-ui": "^2.16.4",
         "clsx": "^2.1.1",
         "github-slugger": "^2.0.0",
-        "gray-matter": "^4.0.3",
         "runed": "^0.37.1",
         "satori": "^0.26.0",
         "satori-html": "^0.3.2",
