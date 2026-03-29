@@ -1,10 +1,10 @@
 <!--
   @component
   Example wrapper with toolbar (refresh, source link, grid background).
-  Uses motion.button/motion.a for hover/tap effects.
+  Uses MotionButton/MotionA for hover/tap effects.
 -->
 <script lang="ts">
-    import { motion } from '@humanspeak/svelte-motion'
+    import { MotionA, MotionButton } from '@humanspeak/svelte-motion'
     import ExternalLink from '@lucide/svelte/icons/external-link'
     import LayoutGrid from '@lucide/svelte/icons/layout-grid'
     import RotateCw from '@lucide/svelte/icons/rotate-cw'
@@ -41,7 +41,7 @@
     <!-- Toolbar -->
     <div class="flex h-12 w-full items-center border-b border-border bg-card/50 px-4">
         <div class="flex flex-1 items-center gap-2">
-            <motion.a
+            <MotionA
                 href="/examples"
                 whileTap={tapScale}
                 whileHover={hoverScale}
@@ -49,7 +49,7 @@
             >
                 <LayoutGrid size={12} />
                 Examples
-            </motion.a>
+            </MotionA>
             {#if title}
                 <span class="text-muted-foreground">/</span>
                 <span class="text-sm font-medium text-foreground">{title}</span>
@@ -57,7 +57,7 @@
         </div>
         <div class="flex items-center gap-2">
             {#if exampleUrl}
-                <motion.a
+                <MotionA
                     href={exampleUrl}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -67,19 +67,19 @@
                 >
                     <ExternalLink size={12} />
                     Open
-                </motion.a>
+                </MotionA>
             {/if}
             {#if sourceUrl}
-                <motion.button
+                <MotionButton
                     onclick={() => window.open(sourceUrl, '_blank')}
                     whileTap={tapScale}
                     whileHover={hoverScale}
                     class="inline-flex items-center justify-center rounded-md border border-border px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:border-brand-500/50 hover:text-foreground"
                 >
                     {sourceHost}
-                </motion.button>
+                </MotionButton>
             {/if}
-            <motion.button
+            <MotionButton
                 onclick={refresh}
                 whileTap={tapScale}
                 whileHover={hoverScale}
@@ -87,7 +87,7 @@
                 title="Reset example"
             >
                 <RotateCw size={12} />
-            </motion.button>
+            </MotionButton>
         </div>
     </div>
 

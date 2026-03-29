@@ -3,7 +3,7 @@
   Collapsible sections with spring animations, active-state highlighting, and external link support.
 -->
 <script lang="ts">
-    import { motion } from '@humanspeak/svelte-motion'
+    import { MotionLi, MotionSpan } from '@humanspeak/svelte-motion'
     import ArrowRight from '@lucide/svelte/icons/arrow-right'
     import ChevronDown from '@lucide/svelte/icons/chevron-down'
     import ExternalLink from '@lucide/svelte/icons/external-link'
@@ -95,7 +95,7 @@
                     class="flex w-full items-center justify-between rounded-md px-3 py-1.5 text-sm font-semibold tracking-wide text-text-primary uppercase transition-colors duration-150 hover:bg-muted"
                 >
                     <span class="flex items-center gap-2 text-left">
-                        <motion.span
+                        <MotionSpan
                             class="inline-flex shrink-0"
                             whileHover={hoverScale}
                             transition={springFast}
@@ -107,7 +107,7 @@
                                     class="text-muted-foreground"
                                 />
                             {/if}
-                        </motion.span>
+                        </MotionSpan>
                         {section.title}
                     </span>
                     <ChevronDown
@@ -125,7 +125,7 @@
                         transition:slide={{ duration: 200 }}
                     >
                         {#each section.items as item (item.href)}
-                            <motion.li
+                            <MotionLi
                                 whileHover={hoverShift}
                                 transition={springSoft}
                             >
@@ -139,7 +139,7 @@
                                         : 'text-muted-foreground hover:bg-muted hover:text-foreground'}"
                                 >
                                     {#if item.icon}
-                                        <motion.span
+                                        <MotionSpan
                                             class="mr-3 inline-flex"
                                             whileHover={hoverScale}
                                             transition={springFast}
@@ -151,7 +151,7 @@
                                                     ? 'text-accent-foreground'
                                                     : 'text-muted-foreground group-hover:text-foreground'}
                                             />
-                                        </motion.span>
+                                        </MotionSpan>
                                     {:else}
                                         <ArrowRight size={12} class="mr-3 text-muted-foreground" />
                                     {/if}
@@ -160,7 +160,7 @@
                                         <ExternalLink size={12} class="ml-2 opacity-50" />
                                     {/if}
                                 </a>
-                            </motion.li>
+                            </MotionLi>
                         {/each}
                     </ul>
                 {/if}

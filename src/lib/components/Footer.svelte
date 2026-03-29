@@ -1,6 +1,6 @@
 <script lang="ts">
     import { type Snippet } from 'svelte'
-    import { motion } from '@humanspeak/svelte-motion'
+    import { MotionSpan } from '@humanspeak/svelte-motion'
 
     const { extra } = $props<{
         extra?: Snippet
@@ -12,7 +12,7 @@
 >
     <div class="mx-auto flex max-w-7xl gap-2 px-4 text-center">
         Made with
-        <motion.span
+        <MotionSpan
             aria-label="Love"
             animate={{
                 scale: [1, 1.2, 1, 1.1, 1]
@@ -27,7 +27,7 @@
             class="inline-block origin-center align-middle leading-none"
         >
             &#10084;&#65039;
-        </motion.span>
+        </MotionSpan>
         by
         <a
             href="https://humanspeak.com"

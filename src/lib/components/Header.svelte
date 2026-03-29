@@ -1,6 +1,6 @@
 <script lang="ts">
     import { resolve } from '$app/paths'
-    import { motion } from '@humanspeak/svelte-motion'
+    import { MotionDiv, MotionImg } from '@humanspeak/svelte-motion'
     import ChevronRightIcon from '@lucide/svelte/icons/chevron-right'
     import type { DocsKitConfig } from '../config.js'
     import { getBreadcrumbContext } from '../contexts/breadcrumb.js'
@@ -30,7 +30,7 @@
                 aria-label="Home"
                 class="inline-flex items-center justify-center"
             >
-                <motion.img
+                <MotionImg
                     src={favicon}
                     alt="logo"
                     class="h-6 w-6 rounded-md"
@@ -81,13 +81,13 @@
                 class="inline-flex items-center justify-center text-text-muted hover:text-text-secondary"
                 aria-label="GitHub"
             >
-                <motion.div
+                <MotionDiv
                     class="inline-flex size-6 items-center justify-center rounded-full border border-border-muted transition-colors hover:border-border-mid"
                     whileTap={tapScale}
                     whileHover={hoverScaleIcon}
                 >
                     <GitHubIcon class="size-3.5" />
-                </motion.div>
+                </MotionDiv>
             </a>
             <a
                 href="https://www.npmjs.com/package/{config.npmPackage}"
@@ -96,13 +96,13 @@
                 class="inline-flex items-center justify-center text-text-muted hover:text-text-secondary"
                 aria-label="NPM"
             >
-                <motion.div
+                <MotionDiv
                     class="inline-flex size-6 items-center justify-center rounded-full border border-border-muted transition-colors hover:border-border-mid"
                     whileTap={tapScale}
                     whileHover={hoverScaleIcon}
                 >
                     <NpmIcon class="size-3.5" />
-                </motion.div>
+                </MotionDiv>
             </a>
         </div>
     </header>
