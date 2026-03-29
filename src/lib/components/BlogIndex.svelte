@@ -28,8 +28,6 @@
 </script>
 
 <div>
-    <h1 class="text-3xl font-bold text-text-primary">Blog</h1>
-
     {#if allTags.length > 0}
         <div class="mt-4 flex flex-wrap gap-2">
             {#each allTags as tag}
