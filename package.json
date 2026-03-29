@@ -100,6 +100,7 @@
         "typescript-eslint": "^8.57.2",
         "vite": "^8.0.3"
     },
+    "packageManager": "pnpm@10.31.0",
     "volta": {
         "node": "24.13.0"
     },
