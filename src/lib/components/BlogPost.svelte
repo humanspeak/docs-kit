@@ -42,6 +42,7 @@
 
 <BlogArticleJsonLd {post} {config} {basePath} />
 
+<article class="prose max-w-none text-text-primary prose-slate dark:prose-invert prose-headings:scroll-mt-20">
 <header class="mb-8 border-b border-border pb-8">
     <div class="flex flex-wrap items-center gap-2 text-sm text-text-muted">
         <time datetime={post.date}>{formattedDate}</time>
@@ -73,3 +74,4 @@
 </header>
 
 <SvelteMarkdown source={post.content} />
+</article>

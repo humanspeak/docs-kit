@@ -34,16 +34,12 @@
     <Header {config} {favicon} />
 
     <main class="flex-1">
-        <article
+        <div
             use:enhanceCodeBlocks
             class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8"
         >
-            <div
-                class="prose max-w-none text-text-primary prose-slate dark:prose-invert prose-headings:scroll-mt-20"
-            >
-                {@render children()}
-            </div>
-        </article>
+            {@render children()}
+        </div>
     </main>
 
     <Footer />
