@@ -114,6 +114,7 @@
         "runed": "^0.37.1",
         "satori": "^0.26.0",
         "satori-html": "^0.3.2",
+        "shiki": "^4.0.2",
         "tailwind-merge": "^3.5.0"
     }
 }
