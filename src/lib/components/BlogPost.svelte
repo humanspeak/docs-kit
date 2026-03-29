@@ -75,9 +75,7 @@
 
 <SvelteMarkdown source={post.content}>
     {#snippet code({ lang, text })}
-        <div class="shiki-container" data-lang={lang}>
-            <pre><code class="language-{lang}">{text}</code></pre>
-        </div>
+        <div class="shiki-container" data-lang={lang}><pre><code class="language-{lang}">{text}</code></pre></div>
     {/snippet}
 </SvelteMarkdown>
 </article>
