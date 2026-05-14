@@ -76,23 +76,31 @@ export interface FetchPackageStatsOptions {
 }
 
 /**
- * Hits the npm registry for `<name>@<version>` and returns the size
- * metadata, or `null` on any error (network failure, 404, timeout, malformed
- * response). Safe to call from a Cloudflare Worker or any other edge
- * runtime that exposes `fetch`.
+ * Hits the npm registry for `<name>@<versionOrTag>` and returns the
+ * size metadata, or `null` on any error (network failure, 404, timeout,
+ * malformed response). Safe to call from a Cloudflare Worker or any
+ * other edge runtime that exposes `fetch`.
+ *
+ * `versionOrTag` accepts either a concrete version (e.g. `'1.5.0'`) or
+ * a dist-tag (e.g. `'latest'`, `'next'`). Defaults to `'latest'` so the
+ * page reflects what's actually installable from npm right now rather
+ * than whatever the consumer's local `package.json` happens to say.
+ * The returned `version` field is always the *resolved* version from
+ * the registry response, not the input argument.
  */
 export const fetchPackageStats = async (
     name: string,
-    version: string,
+    versionOrTag: string = 'latest',
     opts: FetchPackageStatsOptions = {}
 ): Promise<PackageStats | null> => {
     const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS
     const registryBase = opts.registryBase ?? 'https://registry.npmjs.org'
     try {
-        const url = `${registryBase}/${encodeURIComponent(name)}/${encodeURIComponent(version)}`
+        const url = `${registryBase}/${encodeURIComponent(name)}/${encodeURIComponent(versionOrTag)}`
         const res = await fetchWithTimeout(url, timeoutMs)
         if (!res.ok) return null
         const record = (await res.json()) as RegistryVersionRecord
+        const resolvedVersion = record.version ?? versionOrTag
         const dist = record.dist
         let tarballBytes: number | null = null
         if (dist?.tarball) {
@@ -106,7 +114,7 @@ export const fetchPackageStats = async (
         }
         return {
             name,
-            version,
+            version: resolvedVersion,
             tarballBytes,
             unpackedBytes: dist?.unpackedSize ?? null,
             updatedAt: new Date().toISOString()
@@ -117,8 +125,21 @@ export const fetchPackageStats = async (
 }
 
 export interface PackageStatsLoadOptions {
-    /** Workspace `package.json` import (or any `{ name, version }` shape). */
+    /**
+     * Workspace `package.json` import (or any `{ name, version }`
+     * shape). `name` drives the registry lookup. `version` is used only
+     * as an offline fallback when the registry can't be reached — the
+     * canonical displayed version is whatever `dist-tags.latest`
+     * currently resolves to.
+     */
     pkg: { name: string; version: string }
+    /**
+     * Which dist-tag (or concrete version) to surface. Defaults to
+     * `'latest'`, which is almost always what a public docs site
+     * wants: the version a user installs *right now*, not whatever
+     * the consumer's checkout happens to have in its package.json.
+     */
+    versionOrTag?: string
     /** Cache TTL in milliseconds. Defaults to 1 hour. */
     ttlMs?: number
     /** Network timeout in milliseconds. Defaults to 4000ms. */
@@ -152,6 +173,7 @@ interface CacheEntry {
  */
 export const createPackageStatsLoad = (opts: PackageStatsLoadOptions) => {
     const ttlMs = opts.ttlMs ?? 60 * 60 * 1000
+    const versionOrTag = opts.versionOrTag ?? 'latest'
 
     let memo: CacheEntry | null = null
 
@@ -172,7 +194,7 @@ export const createPackageStatsLoad = (opts: PackageStatsLoadOptions) => {
             return { packageStats: memo.data }
         }
 
-        const fresh = await fetchPackageStats(opts.pkg.name, opts.pkg.version, {
+        const fresh = await fetchPackageStats(opts.pkg.name, versionOrTag, {
             timeoutMs: opts.timeoutMs,
             registryBase: opts.registryBase
         })
