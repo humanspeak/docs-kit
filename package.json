@@ -24,6 +24,10 @@
             "types": "./dist/hooks/index.d.ts",
             "default": "./dist/hooks/index.js"
         },
+        "./server": {
+            "types": "./dist/server/index.d.ts",
+            "default": "./dist/server/index.js"
+        },
         "./scripts/fetch-github-stats": {
             "types": "./dist/scripts/fetch-github-stats.d.ts",
             "default": "./dist/scripts/fetch-github-stats.js"
