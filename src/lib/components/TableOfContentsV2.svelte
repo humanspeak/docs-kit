@@ -11,6 +11,7 @@
 -->
 <script lang="ts">
     import { afterNavigate } from '$app/navigation'
+    import { untrack } from 'svelte'
     import type { TocHeading } from '../utils/headings.js'
 
     const { headings = [] } = $props<{ headings: TocHeading[] }>()
@@ -36,10 +37,18 @@
         return headings[0]?.id ?? ''
     }
 
-    /** Apply the new active id, skipping the rune write when nothing changed. */
+    /** Apply the new active id, skipping the rune write when nothing changed.
+     *  The `activeHeading` read inside the guard is wrapped in `untrack` so
+     *  callers from inside a `$effect` don't accumulate a self-cycle:
+     *  reading `activeHeading` would otherwise subscribe the calling effect
+     *  to its own write, and the unconditional reset on effect start would
+     *  re-trigger every run. The on-screen TOC state still updates because
+     *  the assignment notifies *other* consumers (the template). */
     function updateActiveHeading() {
         const next = computeActive()
-        if (next !== activeHeading) activeHeading = next
+        untrack(() => {
+            if (next !== activeHeading) activeHeading = next
+        })
     }
 
     function getScrollContainer(start: HTMLElement | undefined): HTMLElement | Window {
@@ -59,7 +68,12 @@
     }
 
     $effect(() => {
-        activeHeading = ''
+        // Reset on route change so the previous page's active id doesn't
+        // carry over. Wrapped in `untrack` so this write doesn't subscribe
+        // the effect to its own future writes (which would cycle).
+        untrack(() => {
+            activeHeading = ''
+        })
         updateActiveHeading()
 
         // rAF-throttle scroll/resize: at most one layout read per frame.
