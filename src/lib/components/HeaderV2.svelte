@@ -169,11 +169,15 @@
         font-size: 12px;
         letter-spacing: 0;
         /* Three-column grid keeps the centre nav truly centred regardless of
-           how wide the left mark + breadcrumbs grow. The middle column is
-           `auto`-sized so it only takes the nav's intrinsic width; the two
-           `1fr` sides absorb any surplus space symmetrically. */
+           how wide the left mark + breadcrumbs grow.
+           NOTE: the side columns must be `minmax(0, 1fr)` (not bare `1fr`),
+           because `1fr` is shorthand for `minmax(auto, 1fr)` — the implicit
+           `auto` minimum lets the track grow past its theoretical equal
+           share to fit the left content, which would push the nav off-centre.
+           `minmax(0, 1fr)` forces equal-share distribution and lets the left
+           content overflow its track instead of expanding it. */
         display: grid;
-        grid-template-columns: 1fr auto 1fr;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
         align-items: center;
         gap: 16px;
     }
@@ -183,6 +187,10 @@
         gap: 12px;
         min-width: 0;
         justify-self: start;
+        /* Hide overflow so very long breadcrumbs don't push the column
+           visually wider than its track — the auto-sized middle column
+           stays anchored to the true horizontal centre. */
+        overflow: hidden;
     }
     .dk-header-middle {
         display: inline-flex;
@@ -195,6 +203,7 @@
         align-items: center;
         gap: 12px;
         justify-self: end;
+        min-width: 0;
     }
     .dk-mark {
         font-weight: 600;
