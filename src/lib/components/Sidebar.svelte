@@ -9,6 +9,7 @@
     import ExternalLink from '@lucide/svelte/icons/external-link'
     import Heart from '@lucide/svelte/icons/heart'
     import { PersistedState } from 'runed'
+    import { untrack } from 'svelte'
     import { slide } from 'svelte/transition'
     import type { DocsKitConfig } from '../config.js'
     import type { NavItem, NavSection } from '../types/nav.js'
@@ -37,12 +38,8 @@
         loveAndRespect?: NavItem[]
     } = $props()
 
-    // Destructure slug eagerly to avoid state_referenced_locally warning
-    // (config won't change during the component's lifetime)
-    const { slug } = config
-
     const openSections = new PersistedState<Record<string, boolean>>(
-        `${slug}-sidebar-sections`,
+        untrack(() => `${config.slug}-sidebar-sections`),
         {}
     )
 

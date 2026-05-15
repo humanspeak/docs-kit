@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { type Snippet } from 'svelte'
+    import { type Snippet, untrack } from 'svelte'
     import { type SeoContext, setSeoContext } from '../contexts/seo.js'
 
     const { seo, children } = $props<{
@@ -7,7 +7,7 @@
         children?: Snippet
     }>()
 
-    setSeoContext(seo)
+    setSeoContext(untrack(() => seo))
 </script>
 
 {@render children?.()}

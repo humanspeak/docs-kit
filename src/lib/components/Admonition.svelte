@@ -14,10 +14,11 @@
 
     const { type = 'info', title = '', children }: Props = $props()
 
-    const ariaRole: string =
+    const ariaRole: string = $derived(
         type === 'error' ? 'alert' : type === 'info' || type === 'note' ? 'note' : 'status'
+    )
 
-    const typeLabel: string =
+    const typeLabel: string = $derived(
         type === 'error'
             ? 'Error'
             : type === 'warning'
@@ -27,6 +28,7 @@
                 : type === 'note'
                   ? 'Note'
                   : 'Information'
+    )
 </script>
 
 <div class="admonition" data-type={type} role={ariaRole}>

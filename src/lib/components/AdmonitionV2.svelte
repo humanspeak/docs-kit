@@ -23,8 +23,9 @@
 
     const { type = 'info', title = '', children }: Props = $props()
 
-    const ariaRole: string =
+    const ariaRole: string = $derived(
         type === 'error' ? 'alert' : type === 'info' || type === 'note' ? 'note' : 'status'
+    )
 
     const tag: Record<Variant, string> = {
         info: 'INFO',

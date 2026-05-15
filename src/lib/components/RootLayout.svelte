@@ -28,8 +28,8 @@
     // SEO state — owned here, passed to SeoContextProvider for child access
     const seo = $state<SeoContext>({})
 
-    const npmUrl = `https://www.npmjs.com/package/${config.npmPackage}`
-    const repoUrl = `https://github.com/${config.repo}`
+    const npmUrl = $derived(`https://www.npmjs.com/package/${config.npmPackage}`)
+    const repoUrl = $derived(`https://github.com/${config.repo}`)
 
     const softwareAppJsonLd = $derived(
         stars != null
