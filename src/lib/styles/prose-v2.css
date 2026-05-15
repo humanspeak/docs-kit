@@ -110,6 +110,12 @@
     border: 1px solid var(--border);
     background: var(--color-code-block-background, var(--card, var(--background)));
     margin: 1.5em 0;
+    /* Constrain to article width so long source lines scroll the
+       container's <pre> internally instead of expanding the prose
+       column past its allotted track (which used to push the right-side
+       TOC aside off the viewport). */
+    max-width: 100%;
+    overflow: hidden;
 }
 .prose-v2 .shiki-container pre {
     border-radius: 0 !important;
@@ -117,6 +123,7 @@
     background: transparent !important;
     margin: 0 !important;
     padding: 1rem !important;
+    overflow-x: auto;
 }
 .prose-v2 .shiki-container pre.shiki code {
     background: transparent !important;
