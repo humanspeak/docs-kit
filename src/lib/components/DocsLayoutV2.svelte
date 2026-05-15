@@ -183,7 +183,14 @@
     let headings: TocHeading[] = $state([])
 
     const refreshHeadings = () => {
-        if (contentElement) headings = extractHeadings(contentElement)
+        if (!contentElement) return
+        const next = extractHeadings(contentElement)
+        // Untracked to avoid the same self-cycle the breadcrumb effect can hit:
+        // assignment to a `$state` reads the existing value to dedupe, and that
+        // read inside an `$effect` would subscribe the effect to its own write.
+        untrack(() => {
+            headings = next
+        })
     }
 
     $effect(() => {
