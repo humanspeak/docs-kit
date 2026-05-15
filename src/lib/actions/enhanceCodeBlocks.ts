@@ -69,7 +69,7 @@ const wireMotion = (
     btn: HTMLButtonElement,
     iconCopy: SVGElement,
     iconCheck: SVGElement
-): { reset: () => void } => {
+): { scheduleReset: (delay: number) => void } => {
     // Initial state: copy icon visible, check hidden + scaled down.
     iconCopy.style.transformOrigin = 'center'
     iconCheck.style.transformOrigin = 'center'
@@ -96,15 +96,24 @@ const wireMotion = (
     })
 
     let resetTimer: ReturnType<typeof setTimeout> | null = null
+
+    const reset = () => {
+        if (resetTimer) {
+            clearTimeout(resetTimer)
+            resetTimer = null
+        }
+        animate(iconCopy, { opacity: 1, scale: 1 }, { duration: 0.18 })
+        animate(iconCheck, { opacity: 0, scale: 0.6 }, { duration: 0.15 })
+        btn.classList.remove('copied')
+    }
+
     return {
-        reset: () => {
-            if (resetTimer) {
-                clearTimeout(resetTimer)
-                resetTimer = null
-            }
-            animate(iconCopy, { opacity: 1, scale: 1 }, { duration: 0.18 })
-            animate(iconCheck, { opacity: 0, scale: 0.6 }, { duration: 0.15 })
-            btn.classList.remove('copied')
+        /** Schedule a reset for `delay` ms from now, replacing any previous
+         *  scheduled reset so rapid double-clicks restart the success window
+         *  from the most recent click instead of expiring on the first one. */
+        scheduleReset: (delay: number) => {
+            if (resetTimer) clearTimeout(resetTimer)
+            resetTimer = setTimeout(reset, delay)
         }
     }
 }
@@ -157,10 +166,11 @@ const enhance = (container: HTMLElement) => {
             if (!code) return
             navigator.clipboard.writeText(code).then(() => {
                 playCopySuccess(copyBtn, iconCopy, iconCheck)
-                // Hold the success state ~2s, then reset. Re-clicking inside
-                // the window restarts the timer cleanly via wireMotion's
-                // closure — no stuck icons.
-                setTimeout(motionHandle.reset, 2000)
+                // Hold the success state ~2s. `scheduleReset` clears any
+                // prior pending timer so a second click inside the window
+                // restarts the countdown from now, rather than letting the
+                // first click's reset snap the icon back early.
+                motionHandle.scheduleReset(2000)
             })
         })
 
