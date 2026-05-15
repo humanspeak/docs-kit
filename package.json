@@ -123,7 +123,7 @@
         "tailwind-merge": "^3.6.0"
     },
     "pnpm": {
-        "onlyBuiltDependencies": [
+        "neverBuiltDependencies": [
             "@sentry/cli"
         ]
     }
