@@ -14,7 +14,9 @@ export async function fetchGitHubStats(options: FetchGitHubStatsOptions) {
         const stats = { stars, updatedAt: new Date().toISOString() }
         await fs.mkdir(path.dirname(outputPath), { recursive: true })
         await fs.writeFile(outputPath, JSON.stringify(stats, null, 2) + '\n')
-        console.log(`Wrote github-stats.json: ${stats.stars} stars${isFallback ? ' (fallback)' : ''}`)
+        console.log(
+            `Wrote github-stats.json: ${stats.stars} stars${isFallback ? ' (fallback)' : ''}`
+        )
         return stats
     }
 
