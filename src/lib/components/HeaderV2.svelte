@@ -65,9 +65,9 @@
 </script>
 
 <header
-    class="dk-header-v2 flex items-center justify-between border-b border-border bg-background px-6 py-3 text-foreground"
+    class="dk-header-v2 border-b border-border bg-background px-6 py-3 text-foreground"
 >
-    <div class="flex min-w-0 items-center gap-3">
+    <div class="dk-header-left">
         <a
             href={resolve('/')}
             aria-label="Home"
@@ -108,22 +108,26 @@
         {/if}
     </div>
 
-    {#if nav && nav.length > 0}
-        <nav class="dk-nav hidden md:flex" aria-label="Primary">
-            {#each nav as item (item.href)}
-                <a
-                    class="dk-nav-link"
-                    href={item.href}
-                    target={item.external ? '_blank' : undefined}
-                    rel={item.external ? 'noopener noreferrer' : undefined}
-                >
-                    {item.label}{#if item.external}<span aria-hidden="true">↗</span>{/if}
-                </a>
-            {/each}
-        </nav>
-    {/if}
+    <!-- Always-rendered middle slot keeps the grid columns stable so the
+         right cluster stays pinned to the right even when nav is absent. -->
+    <div class="dk-header-middle">
+        {#if nav && nav.length > 0}
+            <nav class="dk-nav hidden md:flex" aria-label="Primary">
+                {#each nav as item (item.href)}
+                    <a
+                        class="dk-nav-link"
+                        href={item.href}
+                        target={item.external ? '_blank' : undefined}
+                        rel={item.external ? 'noopener noreferrer' : undefined}
+                    >
+                        {item.label}{#if item.external}<span aria-hidden="true">↗</span>{/if}
+                    </a>
+                {/each}
+            </nav>
+        {/if}
+    </div>
 
-    <div class="flex items-center gap-3">
+    <div class="dk-header-right">
         <ThemeToggleV2 />
         <a
             href="https://github.com/{config.repo}"
@@ -164,6 +168,33 @@
             'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
         font-size: 12px;
         letter-spacing: 0;
+        /* Three-column grid keeps the centre nav truly centred regardless of
+           how wide the left mark + breadcrumbs grow. The middle column is
+           `auto`-sized so it only takes the nav's intrinsic width; the two
+           `1fr` sides absorb any surplus space symmetrically. */
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 16px;
+    }
+    .dk-header-left {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        justify-self: start;
+    }
+    .dk-header-middle {
+        display: inline-flex;
+        align-items: center;
+        justify-self: center;
+        min-width: 0;
+    }
+    .dk-header-right {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        justify-self: end;
     }
     .dk-mark {
         font-weight: 600;
