@@ -124,10 +124,10 @@
         color: var(--foreground);
     }
     .dk-doc-hero-hilite {
-        color: var(--brand-500, var(--accent));
+        color: var(--color-brand-500, var(--brand-500, var(--accent)));
     }
     :global(.dark) .dk-doc-hero-hilite {
-        color: var(--brand-400, var(--accent));
+        color: var(--color-brand-400, var(--brand-400, var(--accent)));
     }
     .dk-doc-hero-end {
         color: var(--muted-foreground);
@@ -167,14 +167,14 @@
         margin-left: -1px;
     }
     .dk-doc-hero-ctas .pri {
-        background: var(--brand-500, var(--accent));
+        background: var(--color-brand-500, var(--brand-500, var(--accent)));
         color: var(--background);
         font-weight: 600;
-        border-color: var(--brand-500, var(--accent));
+        border-color: var(--color-brand-500, var(--brand-500, var(--accent)));
     }
     .dk-doc-hero-ctas .pri:hover {
-        background: var(--brand-600, var(--accent));
-        border-color: var(--brand-600, var(--accent));
+        background: var(--color-brand-600, var(--brand-600, var(--accent)));
+        border-color: var(--color-brand-600, var(--brand-600, var(--accent)));
     }
     .dk-doc-hero-ctas a:not(.pri):hover {
         background: var(--muted, color-mix(in srgb, var(--foreground) 6%, transparent));

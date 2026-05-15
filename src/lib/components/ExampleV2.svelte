@@ -193,7 +193,7 @@
     }
     .dk-ex-v2 :global(.dk-ex-ctrl:hover) {
         color: var(--foreground);
-        border-color: var(--brand-500, var(--accent));
+        border-color: var(--color-brand-500, var(--brand-500, var(--accent)));
     }
     .dk-ex-v2 :global(.dk-ex-ctrl.square) {
         padding: 4px;
@@ -210,11 +210,11 @@
         justify-content: center;
         background-image:
             radial-gradient(
-                color-mix(in srgb, var(--brand-500, currentColor) 12%, transparent) 1px,
+                color-mix(in srgb, var(--color-brand-500, var(--brand-500, currentColor)) 12%, transparent) 1px,
                 transparent 1px
             ),
             radial-gradient(
-                color-mix(in srgb, var(--brand-500, currentColor) 6%, transparent) 1px,
+                color-mix(in srgb, var(--color-brand-500, var(--brand-500, currentColor)) 6%, transparent) 1px,
                 transparent 1px
             );
         background-position:

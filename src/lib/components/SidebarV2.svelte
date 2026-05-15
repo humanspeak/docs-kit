@@ -237,12 +237,16 @@
         transition: background 0.15s;
     }
     :global(.dk-sb-li.active) .dk-sb-link {
-        color: var(--accent-foreground, var(--foreground));
-        background: color-mix(in srgb, var(--accent) 14%, transparent);
+        color: var(--foreground);
+        background: color-mix(
+            in srgb,
+            var(--color-brand-500, var(--brand-500, var(--accent))) 14%,
+            transparent
+        );
         font-weight: 500;
     }
     :global(.dk-sb-li.active) .dk-sb-bar {
-        background: var(--brand-500, var(--accent));
+        background: var(--color-brand-500, var(--brand-500, var(--accent)));
     }
     .dk-sb-link :global(.dk-sb-ext) {
         margin-left: auto;

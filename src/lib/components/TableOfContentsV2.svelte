@@ -163,13 +163,13 @@
         transition: background 0.15s;
     }
     .dk-toc-li.active .dk-toc-btn {
-        color: var(--brand-600, var(--accent));
+        color: var(--color-brand-600, var(--brand-600, var(--accent)));
         font-weight: 500;
     }
     .dk-toc-li.active .dk-toc-bar {
-        background: var(--brand-500, var(--accent));
+        background: var(--color-brand-500, var(--brand-500, var(--accent)));
     }
     :global(.dark) .dk-toc-li.active .dk-toc-btn {
-        color: var(--brand-400, var(--accent));
+        color: var(--color-brand-400, var(--brand-400, var(--accent)));
     }
 </style>

@@ -122,11 +122,11 @@
 
     /* Variant rails + accents */
     .dk-admon-v2[data-type='info'] .dk-admon-rail {
-        background: var(--brand-500, #2563eb);
+        background: var(--color-brand-500, var(--brand-500, #2563eb));
     }
     .dk-admon-v2[data-type='info'] .dk-admon-icon,
     .dk-admon-v2[data-type='info'] .dk-admon-fig {
-        color: var(--brand-500, #2563eb);
+        color: var(--color-brand-500, var(--brand-500, #2563eb));
     }
     .dk-admon-v2[data-type='note'] .dk-admon-rail {
         background: var(--muted-foreground);

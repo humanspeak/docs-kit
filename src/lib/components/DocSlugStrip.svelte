@@ -70,10 +70,10 @@
         flex: 1;
     }
     .dk-slug-k.accent {
-        color: var(--brand-500, var(--accent));
+        color: var(--color-brand-500, var(--brand-500, var(--accent)));
     }
     :global(.dark) .dk-slug-k.accent {
-        color: var(--brand-400, var(--accent));
+        color: var(--color-brand-400, var(--brand-400, var(--accent)));
     }
     @media (max-width: 720px) {
         .dk-slug-inner {
