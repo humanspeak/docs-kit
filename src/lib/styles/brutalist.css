@@ -1,0 +1,68 @@
+/*
+ * @humanspeak/docs-kit — brutalist-mono palette
+ *
+ * Shared design tokens for the brutalist marketing/home pages.
+ * Import this in your app's CSS in addition to base.css:
+ *   @import '@humanspeak/docs-kit/styles/brutalist.css';
+ *
+ * Then wrap brutalist sections with `class="brut"` (and the outer
+ * page column with `class="brut-wrap"` so the body matches the
+ * palette beyond the content region):
+ *
+ *   <div class="brut-wrap flex min-h-svh flex-col">
+ *     <HeaderV2 ... />
+ *     <main class="brut"> … </main>
+ *     <FooterV2 ... />
+ *   </div>
+ *
+ * Tokens are scoped to `.brut` / `.brut-wrap`, so they don't leak into
+ * the rest of the docs theme. Dark-mode overrides flip when `html.dark`
+ * is set, matching the convention used by HeaderV2 / FooterV2.
+ *
+ * Font expectation: pages that use these tokens should also import
+ * `@fontsource-variable/inter` and `@fontsource-variable/jetbrains-mono`
+ * — the brutalist surfaces use JetBrains Mono for chrome and Inter for
+ * body copy. (docs-kit only ships Lato by default.)
+ */
+
+.brut-wrap,
+.brut {
+    --brut-bg: #f8fcfb;
+    --brut-bg-2: #eef4f1;
+    --brut-ink: #0a0a0a;
+    --brut-ink-2: #525252;
+    --brut-ink-3: #9a9a9a;
+    --brut-rule: #d6dedb;
+    --brut-rule-2: #bbc4c0;
+    --brut-accent: #247768;
+    --brut-accent-hover: #1b5a4e;
+    --brut-accent-ink: #f8fcfb;
+    --brut-accent-soft: rgba(36, 119, 104, 0.1);
+}
+
+.brut-wrap {
+    background: var(--brut-bg);
+}
+
+.brut {
+    background: var(--brut-bg);
+    color: var(--brut-ink);
+    font-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 13px;
+    letter-spacing: 0;
+}
+
+html.dark .brut-wrap,
+html.dark .brut {
+    --brut-bg: #06090a;
+    --brut-bg-2: #0d1110;
+    --brut-ink: #ededed;
+    --brut-ink-2: #9a9a9a;
+    --brut-ink-3: #5a5a5a;
+    --brut-rule: #1c2422;
+    --brut-rule-2: #2a332f;
+    --brut-accent: #54dbbc;
+    --brut-accent-hover: #7fe9d1;
+    --brut-accent-ink: #06090a;
+    --brut-accent-soft: rgba(84, 219, 188, 0.14);
+}
