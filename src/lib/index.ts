@@ -6,7 +6,9 @@ export { default as Admonition } from './components/Admonition.svelte'
 export { default as AdmonitionV2 } from './components/AdmonitionV2.svelte'
 export { default as BreadcrumbContextProvider } from './components/BreadcrumbContextProvider.svelte'
 export { default as BreadcrumbJsonLd } from './components/BreadcrumbJsonLd.svelte'
+export { default as CompareIndexV2 } from './components/CompareIndexV2.svelte'
 export { default as CompareLayoutV2 } from './components/CompareLayoutV2.svelte'
+export { default as ComparisonPageV2 } from './components/ComparisonPageV2.svelte'
 export { default as DocHeroCard } from './components/DocHeroCard.svelte'
 export { default as DocsLayout } from './components/DocsLayout.svelte'
 export { default as DocsLayoutV2 } from './components/DocsLayoutV2.svelte'
@@ -55,3 +57,12 @@ export { enhanceCodeBlocks } from './actions/enhanceCodeBlocks.js'
 
 // Blog types (components and utilities available via '@humanspeak/docs-kit/blog')
 export type { BlogPostData, BlogPostMeta } from './types/blog.js'
+
+// Compare types — drive ComparisonPageV2 + CompareIndexV2 from one
+// `compare-data.ts` array per consumer. See src/lib/types/compare.ts.
+export type {
+    CompareFooterCta,
+    ComparisonFeature,
+    ComparisonOurs,
+    Competitor
+} from './types/compare.js'
