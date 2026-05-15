@@ -1,0 +1,267 @@
+/*
+ * @humanspeak/docs-kit — brutalist-mono prose theme (v2)
+ *
+ * Layers on top of the v1 `prose.css` (or stand-alone). Consumers opt in by
+ * adding `prose-v2` to the same element that carries `prose`:
+ *
+ *     <div class="prose prose-v2">…</div>
+ *
+ * Then `@import '@humanspeak/docs-kit/styles/prose-v2.css'` in your app CSS.
+ *
+ * Visual contract:
+ *  - Headings render in JetBrains Mono, lowercase, tight letter-spacing — the
+ *    same brut mark used by HeaderV2 / DocHeroCard / SidebarV2.
+ *  - Code blocks lose their rounded corners; the language label is a mono
+ *    uppercase caption with a hairline copy-button square.
+ *  - Links + list markers adopt the brand token chain
+ *    (`--color-brand-500` → `--brand-500` → `--accent`).
+ *  - Blockquotes swap italic for a brand-accent left bar.
+ *  - Tables get hairline rows and mono uppercase column heads.
+ */
+
+.prose-v2 {
+    --prose-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+    --prose-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, sans-serif;
+    --prose-accent: var(--color-brand-500, var(--brand-500, var(--accent)));
+    --prose-accent-hover: var(--color-brand-600, var(--brand-600, var(--accent)));
+    --prose-accent-soft: color-mix(in srgb, var(--prose-accent) 8%, transparent);
+
+    font-family: var(--prose-sans);
+}
+
+/* ── Headings ────────────────────────────────────────────────────── */
+.prose-v2 :where(h1, h2, h3, h4, h5, h6) {
+    font-family: var(--prose-mono);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    text-transform: lowercase;
+    color: var(--foreground);
+}
+.prose-v2 :where(h1) {
+    font-size: 2.4em;
+    line-height: 1.05;
+    letter-spacing: -0.045em;
+    margin-top: 0;
+    margin-bottom: 0.6em;
+}
+.prose-v2 :where(h2) {
+    font-size: 1.7em;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    margin-top: 2.4em;
+    padding-top: 1.4em;
+    border-top: 1px solid var(--border);
+}
+.prose-v2 :where(h3) {
+    font-size: 1.25em;
+    line-height: 1.25;
+    margin-top: 1.8em;
+}
+.prose-v2 :where(h4) {
+    font-size: 1.05em;
+    line-height: 1.35;
+    margin-top: 1.4em;
+    color: var(--muted-foreground);
+    letter-spacing: 0;
+}
+
+/* Anchor links inside headings inherit the heading colour. */
+.prose-v2 :where(h1, h2, h3, h4, h5, h6) a {
+    color: inherit !important;
+    text-decoration: none !important;
+    border-bottom: 0 !important;
+}
+
+/* ── Body text ───────────────────────────────────────────────────── */
+.prose-v2 p,
+.prose-v2 li {
+    font-family: var(--prose-sans);
+    letter-spacing: -0.005em;
+}
+
+.prose-v2 strong,
+.prose-v2 b {
+    color: var(--foreground);
+    font-weight: 600;
+}
+
+/* ── Inline code ─────────────────────────────────────────────────── */
+.prose-v2 :not(pre) > code {
+    font-family: var(--prose-mono) !important;
+    background: var(
+        --color-code-background,
+        color-mix(in srgb, var(--muted, var(--foreground)) 8%, transparent)
+    ) !important;
+    border: 1px solid var(--border);
+    border-radius: 0 !important;
+    padding: 1px 6px !important;
+    font-size: 0.85em !important;
+    font-weight: 500;
+    color: var(--foreground) !important;
+}
+.prose-v2 code::before,
+.prose-v2 code::after {
+    content: '' !important;
+}
+
+/* ── Fenced code blocks ──────────────────────────────────────────── */
+.prose-v2 .shiki-container {
+    border-radius: 0 !important;
+    border: 1px solid var(--border);
+    background: var(--color-code-block-background, var(--card, var(--background)));
+    margin: 1.5em 0;
+}
+.prose-v2 .shiki-container pre {
+    border-radius: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    margin: 0 !important;
+    padding: 1rem !important;
+}
+.prose-v2 .shiki-container pre.shiki code {
+    background: transparent !important;
+    padding: 0 !important;
+}
+
+/* Code block header strip — file-path / FIG-style mono caption. */
+.prose-v2 .code-block-header {
+    border-radius: 0 !important;
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--card, var(--background)) 60%, transparent);
+    padding: 7px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.prose-v2 .code-block-lang {
+    font-family: var(--prose-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+    font-weight: 500;
+}
+.prose-v2 .code-block-copy {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 0 !important;
+    background: var(--background);
+    color: var(--muted-foreground);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition:
+        color 0.15s,
+        border-color 0.15s,
+        background 0.15s;
+}
+.prose-v2 .code-block-copy:hover {
+    color: var(--foreground);
+    border-color: var(--prose-accent);
+    transform: none !important;
+}
+.prose-v2 .code-block-copy.copied .icon-check {
+    color: var(--prose-accent);
+}
+
+/* ── Links (excluding heading anchors handled above) ─────────────── */
+.prose-v2 p a,
+.prose-v2 li a,
+.prose-v2 td a,
+.prose-v2 th a {
+    color: var(--prose-accent) !important;
+    text-decoration: none !important;
+    border-bottom: 1px solid var(--prose-accent);
+    padding-bottom: 0;
+    transition:
+        color 0.15s,
+        border-color 0.15s;
+}
+.prose-v2 p a:hover,
+.prose-v2 li a:hover,
+.prose-v2 td a:hover,
+.prose-v2 th a:hover {
+    color: var(--prose-accent-hover) !important;
+    border-color: var(--prose-accent-hover);
+}
+
+/* ── List markers ────────────────────────────────────────────────── */
+.prose-v2 ul > li::marker,
+.prose-v2 ol > li::marker {
+    color: var(--prose-accent);
+}
+
+/* ── Blockquote: brut left bar instead of italic ─────────────────── */
+.prose-v2 blockquote {
+    border-left: 3px solid var(--prose-accent);
+    background: var(--prose-accent-soft);
+    padding: 0.75em 1em;
+    margin: 1.4em 0;
+    font-style: normal;
+    color: var(--foreground);
+}
+.prose-v2 blockquote p {
+    margin: 0;
+}
+.prose-v2 blockquote p:not(:last-child) {
+    margin-bottom: 0.5em;
+}
+
+/* ── Horizontal rule ─────────────────────────────────────────────── */
+.prose-v2 hr {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin: 2em 0;
+}
+
+/* ── Tables ──────────────────────────────────────────────────────── */
+.prose-v2 table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.5em 0;
+    font-family: var(--prose-sans);
+}
+.prose-v2 thead {
+    border-bottom: 1px solid var(--border);
+}
+.prose-v2 th {
+    font-family: var(--prose-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    font-weight: 500;
+    text-align: left;
+    padding: 10px 12px;
+}
+.prose-v2 td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--foreground);
+    font-size: 14px;
+    line-height: 1.5;
+}
+.prose-v2 tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+/* ── Images ──────────────────────────────────────────────────────── */
+.prose-v2 img {
+    border: 1px solid var(--border);
+    border-radius: 0 !important;
+}
+
+/* ── Keyboard / kbd ──────────────────────────────────────────────── */
+.prose-v2 kbd {
+    font-family: var(--prose-mono);
+    font-size: 0.8em;
+    padding: 1px 6px;
+    border: 1px solid var(--border);
+    border-radius: 0 !important;
+    background: var(--card, var(--background));
+    color: var(--foreground);
+}

@@ -53,6 +53,7 @@
         "./styles/base.css": "./dist/styles/base.css",
         "./styles/fonts.css": "./dist/styles/fonts.css",
         "./styles/prose.css": "./dist/styles/prose.css",
+        "./styles/prose-v2.css": "./dist/styles/prose-v2.css",
         "./styles/theme.css": "./dist/styles/theme.css"
     },
     "files": [
