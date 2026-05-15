@@ -38,6 +38,16 @@ export { default as NpmIcon } from './components/icons/NpmIcon.svelte'
 export type { NavItem, NavSection } from './types/nav.js'
 
 // Utilities
+export {
+    buildCompareBreadcrumbs,
+    type BuildCompareBreadcrumbsOptions,
+    type CompareSlugLookup
+} from './utils/compare-breadcrumbs.js'
+export {
+    createCompareSlugLoad,
+    type CompareSlugLoad,
+    type CompareSlugLoadData
+} from './utils/compare-load.js'
 export { fetchOtherProjects } from './utils/fetchOtherProjects.js'
 export { extractHeadings, type TocHeading } from './utils/headings.js'
 export { getDocsTitleByPath, isActivePath } from './utils/nav.js'
