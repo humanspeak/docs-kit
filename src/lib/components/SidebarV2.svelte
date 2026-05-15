@@ -79,27 +79,33 @@
             : [])
     ])
 
-    const isSectionOpen = (section: NavSection): boolean => {
-        if (section.title in openSections.current) return openSections.current[section.title]
-        return true
-    }
+    // Derived open-state map: one O(n) pass per render instead of 3 isSectionOpen()
+    // calls per section per render (button onclick / aria-expanded / {#if} branch).
+    const openMap = $derived.by(() => {
+        const m: Record<string, boolean> = {}
+        for (const s of navigation) {
+            m[s.title] = s.title in openSections.current ? openSections.current[s.title] : true
+        }
+        return m
+    })
 
     const toggleSection = (section: NavSection) => {
         openSections.current = {
             ...openSections.current,
-            [section.title]: !isSectionOpen(section)
+            [section.title]: !openMap[section.title]
         }
     }
 </script>
 
 <nav class="dk-sidebar-v2">
     {#each navigation as section, i (section.title)}
+        {@const open = openMap[section.title]}
         <div class="dk-sb-section" class:dk-sb-first={i === 0}>
             <button
                 type="button"
                 onclick={() => toggleSection(section)}
                 class="dk-sb-section-toggle"
-                aria-expanded={isSectionOpen(section)}
+                aria-expanded={open}
             >
                 <span class="dk-sb-section-label">
                     <MotionSpan
@@ -114,12 +120,9 @@
                     </MotionSpan>
                     {section.title}
                 </span>
-                <ChevronDown
-                    size={11}
-                    class="dk-sb-chev {isSectionOpen(section) ? 'open' : ''}"
-                />
+                <ChevronDown size={11} class="dk-sb-chev {open ? 'open' : ''}" />
             </button>
-            {#if isSectionOpen(section)}
+            {#if open}
                 <ul class="dk-sb-list" transition:slide={{ duration: 180 }}>
                     {#each section.items as item (item.href)}
                         {@const active = isActivePath(item.href, currentPath, item.exact)}

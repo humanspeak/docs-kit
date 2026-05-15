@@ -25,22 +25,21 @@
         window.scrollTo({ top, behavior: 'smooth' })
     }
 
-    function updateActiveHeading() {
-        if (headings.length === 0) {
-            activeHeading = ''
-            return
-        }
+    /** Compute the active id without mutating state. */
+    function computeActive(): string {
+        if (headings.length === 0) return ''
         for (let i = headings.length - 1; i >= 0; i--) {
             const h = headings[i]
-            if (h?.element) {
-                const rect = h.element.getBoundingClientRect()
-                if (rect.top <= 100) {
-                    activeHeading = h.id
-                    return
-                }
-            }
+            if (!h?.element) continue
+            if (h.element.getBoundingClientRect().top <= 100) return h.id
         }
-        if (headings[0]?.id) activeHeading = headings[0].id
+        return headings[0]?.id ?? ''
+    }
+
+    /** Apply the new active id, skipping the rune write when nothing changed. */
+    function updateActiveHeading() {
+        const next = computeActive()
+        if (next !== activeHeading) activeHeading = next
     }
 
     function getScrollContainer(start: HTMLElement | undefined): HTMLElement | Window {
@@ -62,15 +61,24 @@
     $effect(() => {
         activeHeading = ''
         updateActiveHeading()
+
+        // rAF-throttle scroll/resize: at most one layout read per frame.
+        let ticking = false
+        const onTick = () => {
+            if (ticking) return
+            ticking = true
+            requestAnimationFrame(() => {
+                ticking = false
+                updateActiveHeading()
+            })
+        }
+
         const container = getScrollContainer(headings[0]?.element)
-        const add = (t: HTMLElement | Window) => t.addEventListener('scroll', updateActiveHeading)
-        const remove = (t: HTMLElement | Window) =>
-            t.removeEventListener('scroll', updateActiveHeading)
-        add(container)
-        window.addEventListener('resize', updateActiveHeading)
+        container.addEventListener('scroll', onTick, { passive: true })
+        window.addEventListener('resize', onTick, { passive: true })
         return () => {
-            remove(container)
-            window.removeEventListener('resize', updateActiveHeading)
+            container.removeEventListener('scroll', onTick)
+            window.removeEventListener('resize', onTick)
         }
     })
 

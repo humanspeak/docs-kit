@@ -30,21 +30,23 @@
 }
 
 /* ── Headings ────────────────────────────────────────────────────── */
-.prose-v2 :where(h1, h2, h3, h4, h5, h6) {
+/* Use `:is()` (not `:where()`) so the heading-anchor rule below wins on
+   specificity against v1 prose's `.prose h1 a, …` without needing !important. */
+.prose-v2 :is(h1, h2, h3, h4, h5, h6) {
     font-family: var(--prose-mono);
     font-weight: 500;
     letter-spacing: -0.02em;
     text-transform: lowercase;
     color: var(--foreground);
 }
-.prose-v2 :where(h1) {
+.prose-v2 h1 {
     font-size: 2.4em;
     line-height: 1.05;
     letter-spacing: -0.045em;
     margin-top: 0;
     margin-bottom: 0.6em;
 }
-.prose-v2 :where(h2) {
+.prose-v2 h2 {
     font-size: 1.7em;
     line-height: 1.15;
     letter-spacing: -0.03em;
@@ -52,12 +54,12 @@
     padding-top: 1.4em;
     border-top: 1px solid var(--border);
 }
-.prose-v2 :where(h3) {
+.prose-v2 h3 {
     font-size: 1.25em;
     line-height: 1.25;
     margin-top: 1.8em;
 }
-.prose-v2 :where(h4) {
+.prose-v2 h4 {
     font-size: 1.05em;
     line-height: 1.35;
     margin-top: 1.4em;
@@ -66,10 +68,10 @@
 }
 
 /* Anchor links inside headings inherit the heading colour. */
-.prose-v2 :where(h1, h2, h3, h4, h5, h6) a {
-    color: inherit !important;
-    text-decoration: none !important;
-    border-bottom: 0 !important;
+.prose-v2 :is(h1, h2, h3, h4, h5, h6) a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 0;
 }
 
 /* ── Body text ───────────────────────────────────────────────────── */
