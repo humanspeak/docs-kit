@@ -28,24 +28,26 @@
             : `${$page.url.origin}/og-default.png`
     )
 
-    const websiteJsonLd = `<${'script'} type="application/ld+json">${JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'WebSite',
-        name: config.name,
-        alternateName: config.npmPackage,
-        url: config.url,
-        description: config.description,
-        publisher: {
-            '@type': 'Organization',
-            name: 'Humanspeak',
-            url: 'https://humanspeak.com',
-            logo: 'https://humanspeak.com/humanspeak.svg'
-        },
-        sameAs: [
-            `https://github.com/${config.repo}`,
-            `https://www.npmjs.com/package/${config.npmPackage}`
-        ]
-    })}</${'script'}>`
+    const websiteJsonLd = $derived(
+        `<${'script'} type="application/ld+json">${JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: config.name,
+            alternateName: config.npmPackage,
+            url: config.url,
+            description: config.description,
+            publisher: {
+                '@type': 'Organization',
+                name: 'Humanspeak',
+                url: 'https://humanspeak.com',
+                logo: 'https://humanspeak.com/humanspeak.svg'
+            },
+            sameAs: [
+                `https://github.com/${config.repo}`,
+                `https://www.npmjs.com/package/${config.npmPackage}`
+            ]
+        })}</${'script'}>`
+    )
 </script>
 
 <svelte:head>
