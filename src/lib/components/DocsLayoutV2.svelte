@@ -29,7 +29,7 @@
 <script lang="ts">
     import { afterNavigate } from '$app/navigation'
     import { page } from '$app/state'
-    import type { Snippet } from 'svelte'
+    import { untrack, type Snippet } from 'svelte'
     import { enhanceCodeBlocks } from '../actions/enhanceCodeBlocks.js'
     import type { DocsKitConfig } from '../config.js'
     import { getBreadcrumbContext, type Breadcrumb } from '../contexts/breadcrumb.js'
@@ -103,12 +103,22 @@
     // Top-level assignment populates the context during SSR so HeaderV2 and any
     // BreadcrumbJsonLd consumer see crumbs in the server HTML; the $effect catches
     // client-side navigation between sibling doc pages where the layout doesn't remount.
+    //
+    // The write inside the $effect is wrapped in `untrack` because Svelte 5's `$state`
+    // proxy reads the existing value during a `set` to dedupe equal writes, and that
+    // read would otherwise subscribe this effect to `.breadcrumbs` — i.e. the effect
+    // would observe its own writes and re-fire, blowing up as
+    // `effect_update_depth_exceeded`. We still need the dependency on
+    // `page.url.pathname`, so that read stays outside `untrack`.
     if (breadcrumbContext) {
         breadcrumbContext.breadcrumbs = buildCrumbs(page.url.pathname)
     }
     $effect(() => {
         if (!breadcrumbContext) return
-        breadcrumbContext.breadcrumbs = buildCrumbs(page.url.pathname)
+        const next = buildCrumbs(page.url.pathname)
+        untrack(() => {
+            breadcrumbContext.breadcrumbs = next
+        })
     })
 
     /** Pretty slug for the brut strip: "/docs" → "index", "/docs/use-spring" → "use-spring".
