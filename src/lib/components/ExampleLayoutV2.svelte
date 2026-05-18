@@ -1,15 +1,14 @@
 <!--
   @component
-  Brutalist-mono compare-page shell (v2).
+  Brutalist-mono examples-page shell (v2).
 
-  Thin adapter over `BrutLayoutV2` that supplies a `/compare`-specific
-  breadcrumb fallback. Use on `/compare/+layout.svelte` to cover both:
-   - `/compare`           → index list of comparisons
-   - `/compare/<slug>`    → individual head-to-head page
+  Thin adapter over `BrutLayoutV2` that supplies an `/examples`-specific
+  breadcrumb fallback. Use on `/examples/+layout.svelte` to cover both:
+   - `/examples`            → index of interactive demos
+   - `/examples/<slug>`     → individual demo page
 
-  Both surfaces share the same chrome and brut-themed background; that
-  shared shell lives in `BrutLayoutV2`. This component only adds the
-  breadcrumb default if the consumer doesn't pass one.
+  Consumers with custom per-slug breadcrumb titles should pass their own
+  `breadcrumbResolver`; the default just splits the path.
 -->
 <script lang="ts">
     import type { Snippet } from 'svelte'
@@ -35,11 +34,11 @@
     const { config, favicon, version, nav, breadcrumbResolver, children }: Props = $props()
 
     const defaultResolver = (pathname: string): Breadcrumb[] => {
-        if (pathname === '/compare' || pathname === '/compare/') {
-            return [{ title: 'Compare' }]
+        if (pathname === '/examples' || pathname === '/examples/') {
+            return [{ title: 'Examples' }]
         }
-        const slug = pathname.replace('/compare/', '')
-        return [{ title: 'Compare', href: '/compare' }, { title: slug }]
+        const slug = pathname.replace('/examples/', '')
+        return [{ title: 'Examples', href: '/examples' }, { title: slug }]
     }
 
     const resolver = $derived(breadcrumbResolver ?? defaultResolver)

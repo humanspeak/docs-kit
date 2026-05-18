@@ -6,6 +6,8 @@ export { default as Admonition } from './components/Admonition.svelte'
 export { default as AdmonitionV2 } from './components/AdmonitionV2.svelte'
 export { default as BreadcrumbContextProvider } from './components/BreadcrumbContextProvider.svelte'
 export { default as BreadcrumbJsonLd } from './components/BreadcrumbJsonLd.svelte'
+export { default as BrutIndexV2 } from './components/BrutIndexV2.svelte'
+export { default as BrutLayoutV2 } from './components/BrutLayoutV2.svelte'
 export { default as CompareIndexV2 } from './components/CompareIndexV2.svelte'
 export { default as CompareLayoutV2 } from './components/CompareLayoutV2.svelte'
 export { default as ComparisonPageV2 } from './components/ComparisonPageV2.svelte'
@@ -14,6 +16,7 @@ export { default as DocsLayout } from './components/DocsLayout.svelte'
 export { default as DocsLayoutV2 } from './components/DocsLayoutV2.svelte'
 export { default as DocSlugStrip } from './components/DocSlugStrip.svelte'
 export { default as Example } from './components/Example.svelte'
+export { default as ExampleLayoutV2 } from './components/ExampleLayoutV2.svelte'
 export { default as ExampleV2 } from './components/ExampleV2.svelte'
 export { default as Footer } from './components/Footer.svelte'
 export { default as FooterV2 } from './components/FooterV2.svelte'
@@ -76,3 +79,15 @@ export type {
     ComparisonOurs,
     Competitor
 } from './types/compare.js'
+
+// Brutalist index types — props for BrutIndexV2 and any future
+// brut-themed index page.
+export type {
+    BrutIndexCta,
+    BrutIndexFooter,
+    BrutIndexFooterRightEntry,
+    BrutIndexHero,
+    BrutIndexItem,
+    BrutIndexLede,
+    BrutIndexMetaRow
+} from './types/brut.js'
