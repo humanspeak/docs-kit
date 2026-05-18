@@ -7,13 +7,21 @@
   footer — used by both `/compare` and `/examples` style index pages.
 
   Mount inside a brutalist wrapper (a layout that puts `.brut-wrap` on the
-  page root, e.g. `CompareLayoutV2` or any `<div class="brut-wrap …">` shell).
+  page root, e.g. `CompareLayoutV2`, `ExampleLayoutV2`, or any
+  `<div class="brut-wrap …">` shell). The wrapper provides the sheet
+  background; `BrutIndexV2` only owns the `<main class="brut">` content.
+
+  Prop shapes (`hero`, `lede`, `items`, `footer`) are defined in
+  `../types/brut.ts` — see `BrutIndexHero`, `BrutIndexLede`,
+  `BrutIndexItem`, `BrutIndexFooter` for per-field JSDoc.
 
   Wiring example:
 
   ```svelte
   <script lang="ts">
     import { BrutIndexV2 } from '@humanspeak/docs-kit'
+
+    const pad2 = (n: number) => String(n).padStart(2, '0')
   </script>
 
   <BrutIndexV2
@@ -37,7 +45,7 @@
     lede={{ kicker: 'FIG-002 / DEMOS', title: { prefix: 'pick a ', accent: 'demo', suffix: '.' }, body: '…' }}
     items={examples.map((e, i) => ({
       href: `/examples/${e.slug}`,
-      id: `№ ${pad(i + 1)} / ${pad(examples.length)}`,
+      id: `№ ${pad2(i + 1)} / ${pad2(examples.length)}`,
       title: `${e.title.toLowerCase()}.`,
       tag: e.tag,
       line: e.description
@@ -58,11 +66,15 @@
     } from '../types/brut.js'
 
     interface Props {
+        /** Masthead block (meta sidebar + big title + sub copy + CTAs). See `BrutIndexHero`. */
         hero: BrutIndexHero
+        /** Section heading above the grid. See `BrutIndexLede`. */
         lede: BrutIndexLede
+        /** Grid cells. See `BrutIndexItem` for the per-cell shape. */
         items: BrutIndexItem[]
+        /** Big-type footer block. See `BrutIndexFooter`. */
         footer: BrutIndexFooter
-        /** Optional content to render inside <svelte:head> (e.g. JSON-LD). */
+        /** Optional content to render inside `<svelte:head>` (e.g. JSON-LD). */
         head?: Snippet
     }
 

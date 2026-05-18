@@ -24,16 +24,27 @@
     }
 
     interface Props {
+        /** Site identity. Passed straight through to the underlying `BrutLayoutV2`. */
         config: DocsKitConfig
+        /** Brand mark image URL. */
         favicon: string
+        /** Package version string for the brand pill. */
         version?: string
+        /** Inline header nav links. */
         nav?: NavLink[]
+        /** Override the default `/compare` breadcrumb resolver. Pass this when
+         *  your `/compare/<slug>` pages need custom titles (e.g. competitor
+         *  display names rather than raw slugs). */
         breadcrumbResolver?: (pathname: string) => Breadcrumb[]
+        /** Page content. */
         children: Snippet
     }
 
     const { config, favicon, version, nav, breadcrumbResolver, children }: Props = $props()
 
+    // Default mapping: `/compare` → ["Compare"], `/compare/<slug>` →
+    // ["Compare", "<slug>"]. Consumers with prettier titles for individual
+    // comparisons should pass their own resolver via the prop.
     const defaultResolver = (pathname: string): Breadcrumb[] => {
         if (pathname === '/compare' || pathname === '/compare/') {
             return [{ title: 'Compare' }]

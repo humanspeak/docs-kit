@@ -23,16 +23,27 @@
     }
 
     interface Props {
+        /** Site identity. Passed straight through to the underlying `BrutLayoutV2`. */
         config: DocsKitConfig
+        /** Brand mark image URL. */
         favicon: string
+        /** Package version string for the brand pill. */
         version?: string
+        /** Inline header nav links. */
         nav?: NavLink[]
+        /** Override the default `/examples` breadcrumb resolver. Pass this when
+         *  your demo pages need pretty titles (e.g. "Live Playground") instead
+         *  of raw slugs ("playground"). */
         breadcrumbResolver?: (pathname: string) => Breadcrumb[]
+        /** Page content. */
         children: Snippet
     }
 
     const { config, favicon, version, nav, breadcrumbResolver, children }: Props = $props()
 
+    // Default mapping: `/examples` → ["Examples"], `/examples/<slug>` →
+    // ["Examples", "<slug>"]. Consumers with prettier titles should pass
+    // their own resolver via the prop.
     const defaultResolver = (pathname: string): Breadcrumb[] => {
         if (pathname === '/examples' || pathname === '/examples/') {
             return [{ title: 'Examples' }]

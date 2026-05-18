@@ -31,11 +31,17 @@
     }
 
     interface Props {
+        /** Site identity (brand name, social, etc.). Passed straight to `HeaderV2`. */
         config: DocsKitConfig
+        /** Brand mark image URL. */
         favicon: string
+        /** Package version string rendered as a small pill next to the brand. */
         version?: string
+        /** Inline header nav links. */
         nav?: NavLink[]
+        /** Pathname → breadcrumbs. If omitted, the breadcrumb context is left untouched. */
         breadcrumbResolver?: (pathname: string) => Breadcrumb[]
+        /** Page content. Rendered between `HeaderV2` and `FooterV2`. */
         children: Snippet
     }
 
@@ -43,6 +49,9 @@
 
     const breadcrumbContext = getBreadcrumbContext()
 
+    // Push the resolved breadcrumbs into the shared context on initial mount
+    // and on every subsequent client-side navigation. No-op if either the
+    // resolver or the context isn't available.
     const applyBreadcrumbs = (pathname: string) => {
         if (!breadcrumbContext || !breadcrumbResolver) return
         breadcrumbContext.breadcrumbs = breadcrumbResolver(pathname)
