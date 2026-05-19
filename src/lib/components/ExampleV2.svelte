@@ -115,6 +115,12 @@
         /** Label for the code-toggle button. Default `code`. Use this to be
          *  more specific (`view source`, `wire-up`, etc.). */
         codeLabel?: string
+        /** Optional supplementary content for the lede column — renders
+         *  after the description and before the back-link. Useful for
+         *  educational bullets, deep-dive links, or context that belongs
+         *  with the lede vocabulary but doesn't fit one tight paragraph.
+         *  The right-hand panel stays focused on the interactive demo. */
+        notes?: Snippet
     }
 
     const {
@@ -132,7 +138,8 @@
         backHref = '/examples',
         mode = 'live',
         codeSnippet,
-        codeLabel = 'code'
+        codeLabel = 'code',
+        notes
     }: Props = $props()
 
     let codeOpen = $state(false)
@@ -203,6 +210,11 @@
         </h2>
         {#if description}
             <p class="dk-ex-desc">{description}</p>
+        {/if}
+        {#if notes}
+            <div class="dk-ex-notes">
+                {@render notes()}
+            </div>
         {/if}
         <MotionA
             href={backHref}
@@ -403,6 +415,41 @@
         font-size: 13px;
         line-height: 1.55;
         max-width: 240px;
+    }
+    /* Slot for supplementary lede content (bullet lists, deep-dive links,
+       icons + captions). Width-capped to match the description so the
+       lede column stays a coherent narrow rail and doesn't compete with
+       the right-hand demo panel for visual weight. */
+    .dk-ex-notes {
+        margin-top: 16px;
+        font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
+        color: var(--brut-ink-2);
+        font-size: 12.5px;
+        line-height: 1.55;
+        max-width: 240px;
+    }
+    .dk-ex-notes :global(ul) {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .dk-ex-notes :global(li) {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+    }
+    /* Lucide icons inside notes pick up the brut accent and align with
+       the first line of text. Consumers can override by scoping their
+       own classes. */
+    .dk-ex-notes :global(svg) {
+        flex-shrink: 0;
+        margin-top: 3px;
+        color: var(--brut-accent);
+        width: 12px;
+        height: 12px;
     }
     .dk-ex :global(.dk-ex-back) {
         display: inline-block;
