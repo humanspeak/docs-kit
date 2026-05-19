@@ -451,6 +451,19 @@
         width: 12px;
         height: 12px;
     }
+    /* Inline code chips inside notes. The notes column isn't prose, so
+       consumers can drop `<code>` into a `<span>` without buying a full
+       markdown renderer — we style it to match the rest of the brut
+       chrome (bg-2 fill, thin rule, mono). */
+    .dk-ex-notes :global(code) {
+        font-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+        background: var(--brut-bg-2);
+        border: 1px solid var(--brut-rule);
+        padding: 0 4px;
+        font-size: 11.5px;
+        color: var(--brut-ink);
+        border-radius: 2px;
+    }
     .dk-ex :global(.dk-ex-back) {
         display: inline-block;
         margin-top: 18px;
