@@ -1,7 +1,9 @@
 <script lang="ts">
     import { resolve } from '$app/paths'
-    import { MotionDiv, MotionImg } from '@humanspeak/svelte-motion'
+    import { AnimatePresence, MotionDiv, MotionImg } from '@humanspeak/svelte-motion'
     import ChevronRightIcon from '@lucide/svelte/icons/chevron-right'
+    import MenuIcon from '@lucide/svelte/icons/menu'
+    import XIcon from '@lucide/svelte/icons/x'
     import type { DocsKitConfig } from '../config.js'
     import { getBreadcrumbContext } from '../contexts/breadcrumb.js'
     import GitHubIcon from './icons/GitHubIcon.svelte'
@@ -22,8 +24,14 @@
      *    reads as `svelte/markdown`. Single-word names render plainly.
      *  - Chrome icons live inside hairline squares (1px border, no radius)
      *    rather than rounded-full pills.
-     *  - Breadcrumbs use " / " separators and small caps to fit the sheet
-     *    aesthetic instead of chevrons.
+     *  - Breadcrumbs use chevron separators and small caps to fit the sheet
+     *    aesthetic.
+     *  - Responsive: at < 768px the inline nav collapses into a hamburger
+     *    button that opens an animated drawer beneath the header. At <
+     *    640px the breadcrumb hides from the header (it's still in the
+     *    drawer) and the NPM icon hides. Pure CSS media queries — no
+     *    Tailwind class dependency, so the breakpoints work regardless of
+     *    whether the consumer scans node_modules with their Tailwind setup.
      */
     interface NavLink {
         label: string
@@ -59,107 +67,180 @@
         return { head: lower.slice(0, idx), tail: lower.slice(idx + 1) }
     })
 
+    // Drawer state for the mobile menu. Closed by default. Opened by the
+    // hamburger; closed by the X, by clicking any nav link inside, or by
+    // pressing Escape.
+    let menuOpen = $state(false)
+    const toggleMenu = () => {
+        menuOpen = !menuOpen
+    }
+    const closeMenu = () => {
+        menuOpen = false
+    }
+
+    const onKeydown = (event: KeyboardEvent) => {
+        if (event.key === 'Escape' && menuOpen) closeMenu()
+    }
+
     const tapScale = { scale: 0.92 }
     const hoverScaleLogo = { scale: 1.06 }
     const hoverScaleIcon = { scale: 1.04 }
 </script>
 
-<header
-    class="dk-header-v2 border-b border-border bg-background px-6 py-3 text-foreground"
->
-    <div class="dk-header-left">
-        <a
-            href={resolve('/')}
-            aria-label="Home"
-            class="inline-flex items-center justify-center"
-        >
-            <MotionImg
-                src={favicon}
-                alt="logo"
-                class="h-6 w-6"
-                whileTap={tapScale}
-                whileHover={hoverScaleLogo}
-            />
-        </a>
-        <a href={resolve('/')} class="dk-mark" aria-label={config.name}>
-            <span class="dk-mark-head">{mark().head}</span>
-            {#if mark().tail}
-                <span class="dk-mark-slash">/</span><span class="dk-mark-tail">{mark().tail}</span>
-            {/if}
-        </a>
-        {#if version}
-            <span class="dk-version">v{version}</span>
-        {/if}
-        {#if breadcrumbContext && breadcrumbs.length > 0}
-            <nav aria-label="Breadcrumb" class="dk-crumbs hidden sm:flex">
-                {#each breadcrumbs as crumb, index (index)}
-                    <span class="dk-crumb-sep" aria-hidden="true">
-                        <ChevronRightIcon size={11} />
-                    </span>
-                    {#if index === breadcrumbs.length - 1}
-                        <span class="dk-crumb-current" aria-current="page">{crumb.title}</span>
-                    {:else if !crumb.href}
-                        <span class="dk-crumb-muted">{crumb.title}</span>
-                    {:else}
-                        <a href={crumb.href} class="dk-crumb-link">{crumb.title}</a>
-                    {/if}
-                {/each}
-            </nav>
-        {/if}
-    </div>
+<svelte:window on:keydown={onKeydown} />
 
-    <!-- Always-rendered middle slot keeps the grid columns stable so the
-         right cluster stays pinned to the right even when nav is absent. -->
-    <div class="dk-header-middle">
-        {#if nav && nav.length > 0}
-            <nav class="dk-nav hidden md:flex" aria-label="Primary">
-                {#each nav as item (item.href)}
-                    <a
-                        class="dk-nav-link"
-                        href={item.href}
-                        target={item.external ? '_blank' : undefined}
-                        rel={item.external ? 'noopener noreferrer' : undefined}
+<header class="dk-header-v2">
+    <div class="dk-header-row">
+        <div class="dk-header-left">
+            <a
+                href={resolve('/')}
+                aria-label="Home"
+                class="dk-logo-link"
+            >
+                <MotionImg
+                    src={favicon}
+                    alt="logo"
+                    class="dk-logo-img"
+                    whileTap={tapScale}
+                    whileHover={hoverScaleLogo}
+                />
+            </a>
+            <a href={resolve('/')} class="dk-mark" aria-label={config.name}>
+                <span class="dk-mark-head">{mark().head}</span>
+                {#if mark().tail}
+                    <span class="dk-mark-slash">/</span><span class="dk-mark-tail"
+                        >{mark().tail}</span
                     >
-                        {item.label}{#if item.external}<span aria-hidden="true">↗</span>{/if}
-                    </a>
-                {/each}
-            </nav>
-        {/if}
+                {/if}
+            </a>
+            {#if version}
+                <span class="dk-version">v{version}</span>
+            {/if}
+            {#if breadcrumbContext && breadcrumbs.length > 0}
+                <nav aria-label="Breadcrumb" class="dk-crumbs">
+                    {#each breadcrumbs as crumb, index (index)}
+                        <span class="dk-crumb-sep" aria-hidden="true">
+                            <ChevronRightIcon size={11} />
+                        </span>
+                        {#if index === breadcrumbs.length - 1}
+                            <span class="dk-crumb-current" aria-current="page">{crumb.title}</span>
+                        {:else if !crumb.href}
+                            <span class="dk-crumb-muted">{crumb.title}</span>
+                        {:else}
+                            <a href={crumb.href} class="dk-crumb-link">{crumb.title}</a>
+                        {/if}
+                    {/each}
+                </nav>
+            {/if}
+        </div>
+
+        <!-- Always-rendered middle slot keeps the grid columns stable so the
+             right cluster stays pinned to the right even when nav is absent. -->
+        <div class="dk-header-middle">
+            {#if nav && nav.length > 0}
+                <nav class="dk-nav" aria-label="Primary">
+                    {#each nav as item (item.href)}
+                        <a
+                            class="dk-nav-link"
+                            href={item.href}
+                            target={item.external ? '_blank' : undefined}
+                            rel={item.external ? 'noopener noreferrer' : undefined}
+                        >
+                            {item.label}{#if item.external}<span aria-hidden="true">↗</span>{/if}
+                        </a>
+                    {/each}
+                </nav>
+            {/if}
+        </div>
+
+        <div class="dk-header-right">
+            {#if nav && nav.length > 0}
+                <!-- Hamburger trigger: visible only below the inline-nav
+                     breakpoint so it never duplicates the row of links above. -->
+                <button
+                    type="button"
+                    class="dk-icon-square dk-menu-btn"
+                    aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+                    aria-expanded={menuOpen}
+                    aria-controls="dk-mobile-drawer"
+                    onclick={toggleMenu}
+                >
+                    {#if menuOpen}
+                        <XIcon class="size-3.5" />
+                    {:else}
+                        <MenuIcon class="size-3.5" />
+                    {/if}
+                </button>
+            {/if}
+            <ThemeToggleV2 />
+            <a
+                href="https://github.com/{config.repo}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="dk-icon-link"
+                aria-label="GitHub"
+            >
+                <MotionDiv
+                    class="dk-icon-square"
+                    whileTap={tapScale}
+                    whileHover={hoverScaleIcon}
+                >
+                    <GitHubIcon class="size-3.5" />
+                </MotionDiv>
+            </a>
+            <a
+                href="https://www.npmjs.com/package/{config.npmPackage}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="dk-icon-link dk-npm-link"
+                aria-label="NPM"
+            >
+                <MotionDiv
+                    class="dk-icon-square"
+                    whileTap={tapScale}
+                    whileHover={hoverScaleIcon}
+                >
+                    <NpmIcon class="size-3.5" />
+                </MotionDiv>
+            </a>
+        </div>
     </div>
 
-    <div class="dk-header-right">
-        <ThemeToggleV2 />
-        <a
-            href="https://github.com/{config.repo}"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="dk-icon-link text-text-muted hover:text-text-secondary"
-            aria-label="GitHub"
-        >
-            <MotionDiv
-                class="dk-icon-square"
-                whileTap={tapScale}
-                whileHover={hoverScaleIcon}
-            >
-                <GitHubIcon class="size-3.5" />
-            </MotionDiv>
-        </a>
-        <a
-            href="https://www.npmjs.com/package/{config.npmPackage}"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="dk-icon-link text-text-muted hover:text-text-secondary"
-            aria-label="NPM"
-        >
-            <MotionDiv
-                class="dk-icon-square"
-                whileTap={tapScale}
-                whileHover={hoverScaleIcon}
-            >
-                <NpmIcon class="size-3.5" />
-            </MotionDiv>
-        </a>
-    </div>
+    <!-- Mobile drawer: stacked vertically, full-width, slides down from the
+         header. Hidden above the inline-nav breakpoint via CSS so the drawer
+         never appears on desktop even if `menuOpen` somehow stayed true
+         (e.g. after a resize). -->
+    {#if nav && nav.length > 0}
+        <AnimatePresence initial={false}>
+            {#if menuOpen}
+                <MotionDiv
+                    id="dk-mobile-drawer"
+                    key="dk-mobile-drawer"
+                    class="dk-mobile-drawer"
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                >
+                    <nav aria-label="Mobile primary">
+                        {#each nav as item (item.href)}
+                            <a
+                                class="dk-mobile-nav-link"
+                                href={item.href}
+                                target={item.external ? '_blank' : undefined}
+                                rel={item.external ? 'noopener noreferrer' : undefined}
+                                onclick={closeMenu}
+                            >
+                                {item.label}{#if item.external}
+                                    <span aria-hidden="true">↗</span>
+                                {/if}
+                            </a>
+                        {/each}
+                    </nav>
+                </MotionDiv>
+            {/if}
+        </AnimatePresence>
+    {/if}
 </header>
 
 <style>
@@ -168,6 +249,13 @@
             'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
         font-size: 12px;
         letter-spacing: 0;
+        border-bottom: 1px solid var(--color-border-muted, rgba(127, 127, 127, 0.22));
+        background: var(--color-background, var(--brut-bg, var(--background, white)));
+        color: var(--color-text, var(--brut-ink, var(--foreground, inherit)));
+        position: relative;
+    }
+    .dk-header-row {
+        padding: 12px 16px;
         /* Three-column grid keeps the centre nav truly centred regardless of
            how wide the left mark + breadcrumbs grow.
            NOTE: the side columns must be `minmax(0, 1fr)` (not bare `1fr`),
@@ -180,6 +268,12 @@
         grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
         align-items: center;
         gap: 16px;
+    }
+    @media (min-width: 768px) {
+        .dk-header-row {
+            padding-left: 24px;
+            padding-right: 24px;
+        }
     }
     .dk-header-left {
         display: inline-flex;
@@ -201,9 +295,25 @@
     .dk-header-right {
         display: inline-flex;
         align-items: center;
-        gap: 12px;
+        gap: 8px;
         justify-self: end;
         min-width: 0;
+    }
+    @media (min-width: 768px) {
+        .dk-header-right {
+            gap: 12px;
+        }
+    }
+
+    /* ── Brand mark ────────────────────────────────────────────────── */
+    .dk-logo-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .dk-header-v2 :global(.dk-logo-img) {
+        height: 1.5rem;
+        width: 1.5rem;
     }
     .dk-mark {
         font-weight: 600;
@@ -228,6 +338,15 @@
         border: 1px solid var(--color-border-muted, rgba(127, 127, 127, 0.25));
         color: var(--color-text-muted, rgba(127, 127, 127, 0.9));
     }
+    /* Drop the version pill on narrow screens — it's the lowest-priority
+       chrome and reclaims width for the brand mark + breadcrumb. */
+    @media (max-width: 480px) {
+        .dk-version {
+            display: none;
+        }
+    }
+
+    /* ── Breadcrumbs ───────────────────────────────────────────────── */
     .dk-crumbs {
         display: inline-flex;
         align-items: center;
@@ -235,6 +354,14 @@
         margin-left: 4px;
         font-size: 11px;
         color: var(--color-text-muted, rgba(127, 127, 127, 0.9));
+        white-space: nowrap;
+    }
+    /* Hide the breadcrumbs in the header on small screens — they're still
+       reachable inside the mobile drawer's nav links. */
+    @media (max-width: 640px) {
+        .dk-crumbs {
+            display: none;
+        }
     }
     .dk-crumb-sep {
         display: inline-flex;
@@ -253,12 +380,19 @@
     .dk-crumb-link:hover {
         color: var(--color-text, currentColor);
     }
+
+    /* ── Inline nav (desktop) ──────────────────────────────────────── */
     .dk-nav {
-        display: inline-flex;
+        display: none;
         align-items: center;
         gap: 0;
         border-left: 1px solid var(--color-border-muted, rgba(127, 127, 127, 0.18));
         border-right: 1px solid var(--color-border-muted, rgba(127, 127, 127, 0.18));
+    }
+    @media (min-width: 768px) {
+        .dk-nav {
+            display: inline-flex;
+        }
     }
     .dk-nav-link {
         padding: 6px 14px;
@@ -277,21 +411,97 @@
         background: var(--color-surface-muted, rgba(127, 127, 127, 0.06));
         color: var(--color-text, currentColor);
     }
-    .dk-icon-link {
+
+    /* ── Right cluster icons ───────────────────────────────────────── */
+    .dk-icon-link,
+    .dk-menu-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        color: var(--color-text-muted, rgba(127, 127, 127, 0.9));
+        text-decoration: none;
+        transition: color 0.15s;
     }
-    .dk-icon-link :global(.dk-icon-square) {
+    .dk-icon-link:hover,
+    .dk-menu-btn:hover {
+        color: var(--color-text, currentColor);
+    }
+    .dk-icon-link :global(.dk-icon-square),
+    .dk-menu-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 1.5rem;
-        height: 1.5rem;
+        width: 1.6rem;
+        height: 1.6rem;
         border: 1px solid var(--color-border-muted, rgba(127, 127, 127, 0.25));
-        transition: border-color 0.15s, background 0.15s;
+        background: transparent;
+        cursor: pointer;
+        padding: 0;
+        transition: border-color 0.15s, background 0.15s, color 0.15s;
     }
-    .dk-icon-link:hover :global(.dk-icon-square) {
+    .dk-icon-link:hover :global(.dk-icon-square),
+    .dk-menu-btn:hover {
         border-color: var(--color-text, currentColor);
+    }
+    .dk-menu-btn[aria-expanded='true'] {
+        border-color: var(--color-text, currentColor);
+        color: var(--color-text, currentColor);
+    }
+    /* Hide the hamburger above the inline-nav breakpoint. */
+    @media (min-width: 768px) {
+        .dk-menu-btn {
+            display: none;
+        }
+    }
+    /* Drop the NPM icon at the smallest widths so the row still breathes —
+       the hamburger drawer or footer carries that link. */
+    @media (max-width: 480px) {
+        .dk-npm-link {
+            display: none;
+        }
+    }
+
+    /* ── Mobile drawer ─────────────────────────────────────────────── */
+    .dk-header-v2 :global(.dk-mobile-drawer) {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 30;
+        border-bottom: 1px solid var(--color-border-muted, rgba(127, 127, 127, 0.22));
+        background: var(--color-background, var(--brut-bg, var(--background, white)));
+        overflow: hidden;
+    }
+    /* Never let the drawer render at desktop widths — even if `menuOpen`
+       got stuck open during a resize. */
+    @media (min-width: 768px) {
+        .dk-header-v2 :global(.dk-mobile-drawer) {
+            display: none;
+        }
+    }
+    .dk-header-v2 :global(.dk-mobile-drawer nav) {
+        display: flex;
+        flex-direction: column;
+    }
+    .dk-mobile-nav-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px;
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: lowercase;
+        color: var(--color-text, currentColor);
+        text-decoration: none;
+        border-top: 1px solid var(--color-border-muted, rgba(127, 127, 127, 0.14));
+        transition: background 0.15s;
+    }
+    .dk-mobile-nav-link:first-child {
+        border-top: 0;
+    }
+    .dk-mobile-nav-link:hover,
+    .dk-mobile-nav-link:focus-visible {
+        background: var(--color-surface-muted, rgba(127, 127, 127, 0.06));
     }
 </style>
