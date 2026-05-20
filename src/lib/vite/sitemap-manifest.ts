@@ -35,7 +35,10 @@ import type { Plugin, ViteDevServer } from 'vite'
 type SitemapManifest = Record<string, string>
 
 export interface SitemapManifestOptions {
-    /** Filesystem root for scanning. Default: `process.cwd()`. */
+    /** Filesystem root for scanning. When omitted, the plugin adopts
+     *  Vite's resolved project root (`config.root`, i.e. the directory
+     *  containing `vite.config.{ts,js}`). Override when the plugin
+     *  should scan a directory outside the Vite project. */
     root?: string
     /** Directory (relative to `root`) holding the SvelteKit routes. Default
      *  `src/routes`. */
@@ -141,9 +144,16 @@ async function buildManifest(options: ResolvedOptions): Promise<string> {
  *  per routes dir, etc.). */
 export function sitemapManifestPlugin(userOptions: SitemapManifestOptions = {}): Plugin {
     const opts = resolveOptions(userOptions)
-    const routesAbs = resolvePath(opts.root, opts.routesDir)
-    const blogAbs = opts.blogDir ? resolvePath(opts.root, opts.blogDir) : null
-    const outputAbs = resolvePath(opts.root, opts.output)
+    // Mutable so `configResolved` can re-resolve against Vite's project
+    // root when the consumer didn't pass an explicit `root`. Without
+    // that, `process.cwd()` (which only captures *invocation* cwd) lands
+    // the manifest at the wrong path when vite is invoked from outside
+    // the project — e.g. `pnpm --filter docs dev` from the workspace
+    // root produces `process.cwd()` = workspace root, not the docs
+    // subdirectory where the consumer's `vite.config.ts` lives.
+    let routesAbs = resolvePath(opts.root, opts.routesDir)
+    let blogAbs = opts.blogDir ? resolvePath(opts.root, opts.blogDir) : null
+    let outputAbs = resolvePath(opts.root, opts.output)
 
     async function regenerate(): Promise<boolean> {
         const next = await buildManifest(opts)
@@ -184,6 +194,17 @@ export function sitemapManifestPlugin(userOptions: SitemapManifestOptions = {}):
         // Run before SvelteKit so the manifest exists when any module that
         // imports it (e.g. `routes/sitemap.xml/+server.ts`) first resolves.
         enforce: 'pre',
+        configResolved(config) {
+            // Honor an explicit `root` option from the consumer. Otherwise
+            // adopt Vite's resolved project root — `config.root` is the
+            // directory containing the consumer's `vite.config.{ts,js}`,
+            // not the cwd vite was launched from.
+            if (userOptions.root !== undefined) return
+            opts.root = config.root
+            routesAbs = resolvePath(config.root, opts.routesDir)
+            blogAbs = opts.blogDir ? resolvePath(config.root, opts.blogDir) : null
+            outputAbs = resolvePath(config.root, opts.output)
+        },
         async buildStart() {
             await regenerate()
         },

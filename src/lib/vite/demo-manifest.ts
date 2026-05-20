@@ -47,8 +47,11 @@ interface DemoManifestEntry {
 type DemoManifest = Record<string, DemoManifestEntry>
 
 export interface DemoManifestOptions {
-    /** Filesystem root for scanning. Default: `process.cwd()`. Override when
-     *  the plugin runs from a non-standard CWD (monorepo packages, etc.). */
+    /** Filesystem root for scanning. When omitted, the plugin adopts
+     *  Vite's resolved project root (`config.root`, i.e. the directory
+     *  containing `vite.config.{ts,js}`). Override when the plugin
+     *  should scan a directory outside the Vite project, or when
+     *  reusing the plugin from a non-Vite tool. */
     root?: string
     /** Directory (relative to `root`) that contains the example folders.
      *  The plugin recursively walks this and picks up any `.svelte` file
@@ -588,8 +591,17 @@ async function getPrettyPrinter(): Promise<(source: string) => Promise<string>> 
  */
 export function demoManifestPlugin(userOptions: DemoManifestOptions = {}): Plugin {
     const opts = resolveOptions(userOptions)
-    const examplesAbs = resolvePath(opts.root, opts.examplesDir)
-    const outputAbs = resolvePath(opts.root, opts.output)
+    // Computed eagerly from `opts.root` (= `process.cwd()` by default)
+    // so the very first synchronous code path keeps working, then
+    // re-resolved in `configResolved` against Vite's *project* root
+    // when the consumer didn't pass an explicit `root`. Without that
+    // re-resolve, invocations from outside the project — e.g.
+    // `pnpm --filter docs dev` running vite from the workspace root —
+    // would land the manifest at `<workspace>/src/lib/...` instead of
+    // `<project>/src/lib/...`, and any `import '$lib/demo-manifest.json'`
+    // would fail to find a file the plugin had actually written.
+    let examplesAbs = resolvePath(opts.root, opts.examplesDir)
+    let outputAbs = resolvePath(opts.root, opts.output)
 
     // Singleton highlighter — created lazily on first run, reused across
     // every subsequent regeneration so we don't repeatedly pay shiki's
@@ -647,6 +659,17 @@ export function demoManifestPlugin(userOptions: DemoManifestOptions = {}): Plugi
         // Run before SvelteKit / svelte plugins so the manifest exists when
         // any +page.svelte that imports it is first resolved.
         enforce: 'pre',
+        configResolved(config) {
+            // Honor an explicit `root` option from the consumer. Otherwise
+            // adopt Vite's resolved project root — `config.root` is the
+            // directory containing `vite.config.{ts,js}` (or whatever the
+            // CLI's `--root` argument points at), which is the consumer's
+            // *project*, not the cwd vite was launched from.
+            if (userOptions.root !== undefined) return
+            opts.root = config.root
+            examplesAbs = resolvePath(config.root, opts.examplesDir)
+            outputAbs = resolvePath(config.root, opts.output)
+        },
         async buildStart() {
             await regenerate()
         },
