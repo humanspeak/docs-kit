@@ -294,9 +294,10 @@ function unwrapMarkedElements(source: string, classTokens: string[]): string {
  *  - At-rules (`@media`, `@supports`, …) aren't recursed into. A demo
  *    that hides its positioning shell behind `@media` will leave an
  *    orphan rule; rare enough that we accept it.
- *  - Doesn't strip the `<style>` element itself when emptied — Svelte
- *    is happy with an empty style block and Shiki renders it as a
- *    single trailing line, which is visually fine.
+ *  - When the strip leaves the `<style>` body whitespace-only, the
+ *    element itself is removed too. (Earlier versions left an empty
+ *    `<style></style>` shell trailing the published code, which is
+ *    visual noise — even though Svelte tolerates it at runtime.)
  */
 function stripOrphanCSSRules(source: string, classTokens: string[]): string {
     if (classTokens.length === 0) return source
@@ -313,6 +314,12 @@ function stripOrphanCSSRules(source: string, classTokens: string[]): string {
 
     return source.replace(/<style([^>]*)>([\s\S]*?)<\/style>/g, (_full, attrs, body) => {
         const cleaned = body.replace(orphanRuleRe, '').replace(/\n{3,}/g, '\n\n')
+        // Drop the whole `<style>` element when the strip emptied it —
+        // an empty shell in the published code panel is pure noise.
+        // `collapseBlanks` later normalises the blank line we leave
+        // behind. Preserve elements that still carry any non-whitespace
+        // content (rules we didn't target, comments, etc.).
+        if (cleaned.trim() === '') return ''
         return `<style${attrs}>${cleaned}</style>`
     })
 }
