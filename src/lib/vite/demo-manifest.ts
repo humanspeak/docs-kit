@@ -65,6 +65,27 @@ export interface DemoManifestOptions {
      *  (`svelte`, `typescript`, `javascript`, `html`). Use for demos that
      *  reach for `css`, `bash`, `json`, etc. */
     extraLangs?: string[]
+    /** Marker substrings whose enclosing comment should be stripped before
+     *  highlighting. Catches both block comments inside
+     *  `<script>` / `<style>` (`/* HUMANSPEAK ... *​/`) and template
+     *  comments in markup (`<!-- HUMANSPEAK ... -->`). Useful for
+     *  maintainer notes that explain *why* a demo file carries some
+     *  positioning shell, without leaking that explanation into the
+     *  published code panel. Match is plain `String.includes` —
+     *  case-sensitive, no regex. Default `[]` (feature off). */
+    stripComments?: string[]
+    /** Class names whose wrapping element should be unwrapped — the
+     *  opening + closing tags vanish, the element's children stay in
+     *  place as siblings. Pairs with stripping the matching CSS rule
+     *  from the demo's `<style>` block so the published source doesn't
+     *  carry an orphan selector that targets nothing.
+     *
+     *  Match is plain class-token equality (`class="foo bar"` matches
+     *  both `foo` and `bar`); no regex, no `.` prefix. Self-closing
+     *  elements aren't unwrapped (they have no children to preserve);
+     *  the plugin leaves them in place and logs a warning at build
+     *  time. Default `[]` (feature off). */
+    stripWrappers?: string[]
 }
 
 interface ResolvedOptions {
@@ -73,6 +94,8 @@ interface ResolvedOptions {
     output: string
     themes: [string, string]
     langs: string[]
+    stripComments: string[]
+    stripWrappers: string[]
 }
 
 const DEFAULT_LANGS = ['svelte', 'typescript', 'javascript', 'html']
@@ -84,8 +107,214 @@ function resolveOptions(opts: DemoManifestOptions): ResolvedOptions {
         examplesDir: opts.examplesDir ?? 'src/lib/examples',
         output: opts.output ?? 'src/lib/demo-manifest.json',
         themes: opts.themes ?? ['github-light', 'one-dark-pro'],
-        langs: Array.from(new Set([...DEFAULT_LANGS, ...(opts.extraLangs ?? [])]))
+        langs: Array.from(new Set([...DEFAULT_LANGS, ...(opts.extraLangs ?? [])])),
+        stripComments: opts.stripComments ?? [],
+        stripWrappers: opts.stripWrappers ?? []
     }
+}
+
+/**
+ * Strip block (`/* … *​/`) and template (`<!-- … -->`) comments whose body
+ * contains any of the marker substrings. Lets consumers leave maintainer
+ * notes inside demo files (explaining positioning chrome, internal
+ * intent, etc.) without leaking that prose into the published code panel.
+ *
+ * Both comment forms are matched with non-greedy bodies so adjacent
+ * comments don't accidentally fuse into a single regex match. Match is
+ * `String.includes` — case-sensitive, no regex syntax to escape.
+ *
+ * Heuristic: doesn't try to tell apart comments inside strings/templates
+ * from real comments. Demo files we ship don't embed comment delimiters
+ * inside string literals, so we accept the simpler implementation.
+ */
+function stripMarkedComments(source: string, markers: string[]): string {
+    if (markers.length === 0) return source
+
+    // Block comments: /* … */, possibly multi-line.
+    const blockCommentRe = /\/\*[\s\S]*?\*\//g
+    // Template comments: <!-- … -->, possibly multi-line.
+    const templateCommentRe = /<!--[\s\S]*?-->/g
+
+    const shouldStrip = (body: string): boolean => markers.some((m) => body.includes(m))
+
+    return source
+        .replace(blockCommentRe, (match) => (shouldStrip(match) ? '' : match))
+        .replace(templateCommentRe, (match) => (shouldStrip(match) ? '' : match))
+}
+
+/**
+ * Unwrap every element whose `class` attribute contains any of the
+ * given class tokens. The element's opening + closing tags vanish; the
+ * children stay where they were as siblings of the original parent.
+ *
+ * Tag matching is depth-balanced by tag name so nested same-tag children
+ * (e.g. a `<div>` inside our marker `<div>`) don't fool the close-tag
+ * search. Multi-line attribute layouts are tolerated — we look at the
+ * full text between `<` and `>` regardless of newlines.
+ *
+ * Self-closing matches (`<MarkerDiv ... />`) have no body to preserve;
+ * we leave them in place and log a single warning per build (callers
+ * presumably authored the marker class on a wrapping element, not a
+ * leaf — silently dropping a leaf would be surprising).
+ *
+ * Heuristic, not an HTML parser: works for the closed set of patterns
+ * a demo file's positioning shell uses. Won't correctly handle:
+ *   - Tags inside string literals or template-literal expressions
+ *   - Mismatched/unclosed tags (Svelte's compiler would have errored already)
+ *   - Attribute-name collisions like `data-class="..."` (matches `class=`
+ *     anchored, so this is fine in practice)
+ */
+function unwrapMarkedElements(source: string, classTokens: string[]): string {
+    if (classTokens.length === 0) return source
+
+    // Match opening tags + capture tag name and attrs body.
+    // `[^<]*?` for the attrs body keeps the regex from consuming a `<`
+    // belonging to a sibling/child element; the outer `[\s\S]` flag is
+    // implicit via the character-class shape.
+    const openTagRe = /<(\w[\w-]*)([^<>]*?)>/g
+
+    // Within a captured attrs body, look for `class="…"` or `class='…'`
+    // and split the value on whitespace. Tolerates spread-style
+    // `class={…}` only loosely — we treat the literal text inside `{}`
+    // as a class string, which is good enough for typical demo files
+    // and degrades safely (no match → no strip) for dynamic classes.
+    const classValueRe = /\bclass\s*=\s*(?:["']([^"']*)["']|\{([^}]*)\})/
+
+    const hasMarkerClass = (attrs: string): boolean => {
+        const m = classValueRe.exec(attrs)
+        if (!m) return false
+        const raw = m[1] ?? m[2] ?? ''
+        const tokens = raw.replace(/['"]/g, '').split(/\s+/).filter(Boolean)
+        return tokens.some((t) => classTokens.includes(t))
+    }
+
+    /** Find the index of the matching closing tag for `<tagName>` starting
+     *  scanning at `from`. Depth-balanced by `tagName` so nested same-tag
+     *  children don't fool us. Returns `-1` if no balanced close is found. */
+    function findMatchingClose(tagName: string, from: number): number {
+        const sameTagOpenRe = new RegExp(`<${tagName}\\b[^<>]*?>`, 'g')
+        const sameTagSelfCloseRe = new RegExp(`<${tagName}\\b[^<>]*?/>`, 'g')
+        const sameTagCloseRe = new RegExp(`</${tagName}\\s*>`, 'g')
+        sameTagOpenRe.lastIndex = from
+        sameTagSelfCloseRe.lastIndex = from
+        sameTagCloseRe.lastIndex = from
+
+        let depth = 1
+        let cursor = from
+        while (depth > 0) {
+            sameTagOpenRe.lastIndex = cursor
+            sameTagSelfCloseRe.lastIndex = cursor
+            sameTagCloseRe.lastIndex = cursor
+            const opens = sameTagOpenRe.exec(source)
+            const selfs = sameTagSelfCloseRe.exec(source)
+            const closes = sameTagCloseRe.exec(source)
+            if (!closes) return -1
+
+            // Pick whichever event happens first.
+            const events = [opens, closes].filter(Boolean) as RegExpExecArray[]
+            events.sort((a, b) => a.index - b.index)
+            const next = events[0]
+            if (!next) return -1
+
+            // Self-closing same-tag elements aren't real depth changes; we
+            // detect them by checking whether the open match ends with `/>`.
+            const isSelfClose = next === opens && /\/>\s*$/.test(next[0])
+            if (next === opens && !isSelfClose) depth++
+            else if (next === closes) depth--
+
+            cursor = next.index + next[0].length
+        }
+        return cursor - `</${tagName}>`.length
+    }
+
+    // Collect ranges to delete; apply them right-to-left so earlier
+    // offsets stay valid as the string shrinks.
+    type Range = { start: number; end: number }
+    const deletions: Range[] = []
+    let warned = false
+
+    // We can't reuse `openTagRe.exec` mid-loop because we mutate the
+    // string, so collect matches first and resolve close indices once.
+    const matches: { tag: string; openStart: number; openEnd: number; isSelfClose: boolean }[] = []
+    let m: RegExpExecArray | null
+    while ((m = openTagRe.exec(source))) {
+        const [full, tag, attrs] = m
+        if (!hasMarkerClass(attrs)) continue
+        const isSelfClose = /\/>\s*$/.test(full)
+        matches.push({
+            tag,
+            openStart: m.index,
+            openEnd: m.index + full.length,
+            isSelfClose
+        })
+    }
+
+    for (const { tag, openStart, openEnd, isSelfClose } of matches) {
+        if (isSelfClose) {
+            if (!warned) {
+                // eslint-disable-next-line no-console
+                console.warn(
+                    `[docs-kit:demo-manifest] stripWrappers: self-closing <${tag}> with marker class is unsupported — leaving in place.`
+                )
+                warned = true
+            }
+            continue
+        }
+        const closeStart = findMatchingClose(tag, openEnd)
+        if (closeStart === -1) {
+            // No balanced close — leave the source untouched rather than
+            // produce a half-stripped result.
+            continue
+        }
+        const closeEnd = closeStart + `</${tag}>`.length
+        deletions.push({ start: openStart, end: openEnd })
+        deletions.push({ start: closeStart, end: closeEnd })
+    }
+
+    // Apply right-to-left.
+    deletions.sort((a, b) => b.start - a.start)
+    let out = source
+    for (const { start, end } of deletions) {
+        out = out.slice(0, start) + out.slice(end)
+    }
+    return out
+}
+
+/**
+ * Strip rules from `<style>` blocks that target ONLY the given class
+ * tokens. Pairs with `unwrapMarkedElements` so the published code
+ * doesn't carry an orphan `.humanspeak-demo-shell { … }` rule pointing
+ * at an element that no longer exists.
+ *
+ * Limitations:
+ *  - Doesn't try to handle compound selectors. `.marker, .other`
+ *    survives intact (it still has a useful arm). To strip the
+ *    `.marker` arm specifically we'd need a CSS parser; deferred until
+ *    we have a real reason.
+ *  - At-rules (`@media`, `@supports`, …) aren't recursed into. A demo
+ *    that hides its positioning shell behind `@media` will leave an
+ *    orphan rule; rare enough that we accept it.
+ *  - Doesn't strip the `<style>` element itself when emptied — Svelte
+ *    is happy with an empty style block and Shiki renders it as a
+ *    single trailing line, which is visually fine.
+ */
+function stripOrphanCSSRules(source: string, classTokens: string[]): string {
+    if (classTokens.length === 0) return source
+
+    const escaped = classTokens.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')
+    // Selector that targets ONLY one of our marker tokens (no commas,
+    // no descendant combinators). Allows for trailing pseudo-classes
+    // or :global() wrapping so `.marker:hover { … }` and
+    // `:global(.marker) { … }` both strip.
+    const orphanRuleRe = new RegExp(
+        `(?:^|\\n)[ \\t]*(?::global\\s*\\(\\s*)?\\.(?:${escaped})\\b[\\w:()\\-]*\\s*\\)?\\s*\\{[^}]*\\}`,
+        'g'
+    )
+
+    return source.replace(/<style([^>]*)>([\s\S]*?)<\/style>/g, (_full, attrs, body) => {
+        const cleaned = body.replace(orphanRuleRe, '').replace(/\n{3,}/g, '\n\n')
+        return `<style${attrs}>${cleaned}</style>`
+    })
 }
 
 /**
@@ -260,11 +489,26 @@ async function buildManifestJson(
     for (const file of files) {
         const rel = relative(examplesRoot, file).split(sep).join('/')
         const raw = await readFile(file, 'utf8')
-        // Display copy: docs-kit imports + their tags stripped, snippet
-        // wrappers unwrapped, then prettier-formatted so the orphan
-        // indentation left behind by the strip pass gets normalised. The
-        // raw file on disk stays as-is.
-        const stripped = stripDocsKitChrome(raw)
+        // Display copy pipeline (order matters):
+        //   1. Drop consumer-marked comments (`stripComments`) — must
+        //      run before structural strips so a comment that lives
+        //      inside an about-to-be-unwrapped element still gets
+        //      removed even if the rest of the strip succeeds.
+        //   2. Unwrap consumer-marked wrapper elements
+        //      (`stripWrappers`). Children stay in place.
+        //   3. Strip orphan CSS rules targeting those marker classes
+        //      from the demo's `<style>` block so the displayed source
+        //      doesn't carry selectors pointing at nothing.
+        //   4. Strip docs-kit chrome (imports + tags + snippet
+        //      wrappers) the consumer didn't author themselves.
+        //   5. Prettier-format the result so the orphan indentation
+        //      left behind by every strip pass gets normalised.
+        // The raw file on disk stays as-is for all of this — only the
+        // emitted manifest sees the cleaned form.
+        const noComments = stripMarkedComments(raw, options.stripComments)
+        const unwrapped = unwrapMarkedElements(noComments, options.stripWrappers)
+        const noOrphanCSS = stripOrphanCSSRules(unwrapped, options.stripWrappers)
+        const stripped = stripDocsKitChrome(noOrphanCSS)
         const code = await formatter(stripped)
         manifest[rel] = {
             code,
