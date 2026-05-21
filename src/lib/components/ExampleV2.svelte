@@ -30,6 +30,7 @@
   ```
 -->
 <script lang="ts">
+    import SvelteMarkdown from '@humanspeak/svelte-markdown'
     import { MotionA, MotionButton, MotionDiv } from '@humanspeak/svelte-motion'
     import ExternalLink from '@lucide/svelte/icons/external-link'
     import RotateCw from '@lucide/svelte/icons/rotate-cw'
@@ -67,7 +68,10 @@
          *  shape used across the homepage and `/compare`. Can also be
          *  passed as a plain string — it'll be rendered as the accent. */
         title: TitleShape | string
-        /** Lede paragraph under the headline. Plain text only. */
+        /** Lede paragraph under the headline. Rendered through
+         *  `@humanspeak/svelte-markdown`, so inline markdown like
+         *  `` `code` ``, `**bold**`, and `[links](url)` are supported.
+         *  Plain text strings render unchanged. */
         description?: string
         /** Category pill rendered in the top kicker (e.g. `RENDERERS`,
          *  `SECURITY`). Echoes the tag shown on the index card so a
@@ -209,7 +213,9 @@
             >{#if titleShape.end}<span class="end">{titleShape.end}</span>{/if}
         </h2>
         {#if description}
-            <p class="dk-ex-desc">{description}</p>
+            <div class="dk-ex-desc">
+                <SvelteMarkdown source={description} />
+            </div>
         {/if}
         {#if notes}
             <div class="dk-ex-notes">
@@ -415,6 +421,26 @@
         font-size: 13px;
         line-height: 1.55;
         max-width: 240px;
+    }
+    /* SvelteMarkdown emits <p> blocks; strip the synthetic margin so the
+       container's `margin: 12px 0 0` keeps owning the offset. */
+    .dk-ex-desc :global(p) {
+        margin: 0;
+    }
+    .dk-ex-desc :global(p + p) {
+        margin-top: 8px;
+    }
+    /* Inline code in lede prose — same chip styling as the notes column
+       so description-code (rendered by SvelteMarkdown) and note-code
+       (rendered by consumer markup) read as a single design language. */
+    .dk-ex-desc :global(code) {
+        font-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+        background: var(--brut-bg-2);
+        border: 1px solid var(--brut-rule);
+        padding: 0 4px;
+        font-size: 11.5px;
+        color: var(--brut-ink);
+        border-radius: 2px;
     }
     /* Slot for supplementary lede content (bullet lists, deep-dive links,
        icons + captions). Width-capped to match the description so the
