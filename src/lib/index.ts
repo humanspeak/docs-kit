@@ -42,6 +42,13 @@ export { default as NpmIcon } from './components/icons/NpmIcon.svelte'
 // Nav types
 export type { NavItem, NavSection } from './types/nav.js'
 
+// ExampleV2 page helpers
+export {
+    formatSheetLabel,
+    type DemoManifestEntry,
+    type ExampleSection
+} from './types/example-section.js'
+
 // Utilities
 export {
     buildCompareBreadcrumbs,

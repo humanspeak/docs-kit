@@ -595,9 +595,15 @@
     }
 
     /* ── Body — the demo ─────────────────────────────────────────── */
+    /* `flex: 1 1 auto` claims the leftover height inside the panel so
+       the foot anchors at the bottom of the row instead of riding up
+       under a short demo. Demos with tall natural content are
+       unaffected — basis `auto` respects content size as the lower
+       bound. */
     .dk-ex-body {
         position: relative;
         min-height: 0;
+        flex: 1 1 auto;
         display: flex;
         flex-direction: column;
     }

@@ -75,7 +75,11 @@ export interface DemoManifestOptions {
      *  maintainer notes that explain *why* a demo file carries some
      *  positioning shell, without leaking that explanation into the
      *  published code panel. Match is plain `String.includes` —
-     *  case-sensitive, no regex. Default `[]` (feature off). */
+     *  case-sensitive, no regex.
+     *
+     *  Always includes `'dk-strip'` so demos that use the docs-kit
+     *  convention (`<!-- dk-strip: positioning shell -->`) just work
+     *  without configuration. Defaults are merged, not replaced. */
     stripComments?: string[]
     /** Class names whose wrapping element should be unwrapped — the
      *  opening + closing tags vanish, the element's children stay in
@@ -87,9 +91,17 @@ export interface DemoManifestOptions {
      *  both `foo` and `bar`); no regex, no `.` prefix. Self-closing
      *  elements aren't unwrapped (they have no children to preserve);
      *  the plugin leaves them in place and logs a warning at build
-     *  time. Default `[]` (feature off). */
+     *  time.
+     *
+     *  Always includes `'dk-demo-shell'` so demos using the docs-kit
+     *  centering convention (`<div class="dk-demo-shell">…</div>`) just
+     *  work without configuration. Defaults are merged, not replaced. */
     stripWrappers?: string[]
 }
+
+/** Stripped automatically — see `stripComments` / `stripWrappers` docs. */
+const DEFAULT_STRIP_COMMENTS = ['dk-strip']
+const DEFAULT_STRIP_WRAPPERS = ['dk-demo-shell']
 
 interface ResolvedOptions {
     root: string
@@ -111,8 +123,12 @@ function resolveOptions(opts: DemoManifestOptions): ResolvedOptions {
         output: opts.output ?? 'src/lib/demo-manifest.json',
         themes: opts.themes ?? ['github-light', 'one-dark-pro'],
         langs: Array.from(new Set([...DEFAULT_LANGS, ...(opts.extraLangs ?? [])])),
-        stripComments: opts.stripComments ?? [],
-        stripWrappers: opts.stripWrappers ?? []
+        stripComments: Array.from(
+            new Set([...DEFAULT_STRIP_COMMENTS, ...(opts.stripComments ?? [])])
+        ),
+        stripWrappers: Array.from(
+            new Set([...DEFAULT_STRIP_WRAPPERS, ...(opts.stripWrappers ?? [])])
+        )
     }
 }
 

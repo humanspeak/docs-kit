@@ -66,3 +66,28 @@ html.dark .brut {
     --brut-accent-ink: #06090a;
     --brut-accent-soft: rgba(84, 219, 188, 0.14);
 }
+
+/*
+ * Demo-shell convention for ExampleV2 demos.
+ *
+ * Lesson code often needs positioning chrome (centering, padding, a
+ * minimum height) that doesn't belong in the published code sample.
+ * Wrap the demo with `<div class="dk-demo-shell">…</div>` and the
+ * `demoManifestPlugin` will strip the wrapper from the published source
+ * by default (the class name lives in `DEFAULT_STRIP_WRAPPERS`).
+ *
+ * The plugin only strips at code-publish time — at render time the
+ * shell is still in the DOM, so these styles do the centering.
+ *
+ * Tune the minimum height per demo with the `--dk-demo-min-h` custom
+ * property: `<div class="dk-demo-shell" style="--dk-demo-min-h: 320px">`.
+ */
+.dk-demo-shell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem;
+    min-height: var(--dk-demo-min-h, 280px);
+}
