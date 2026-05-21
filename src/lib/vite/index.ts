@@ -7,4 +7,5 @@
  * (filesystem scanning, manifest emission, etc.).
  */
 export { demoManifestPlugin, type DemoManifestOptions } from './demo-manifest.js'
+export { docMirrorsPlugin, type DocMirrorsOptions } from './doc-mirrors.js'
 export { sitemapManifestPlugin, type SitemapManifestOptions } from './sitemap-manifest.js'
