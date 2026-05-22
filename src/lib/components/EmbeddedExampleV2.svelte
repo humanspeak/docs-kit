@@ -173,9 +173,29 @@
 
 <style>
     /* Hairline-bordered card — same panel structure ExampleV2 uses, just
-       without the lede column wrapped around it. Brutalist surface tokens
-       come from `@humanspeak/docs-kit/styles/brutalist.css`. */
+       without the lede column wrapped around it.
+
+       Unlike ExampleV2 (which lives inside an `ExampleLayoutV2` /
+       `BrutLayoutV2` ancestor that injects `--brut-*` tokens via
+       `brutalist.css`), this component is designed to be dropped inline
+       into a docs page where no brut wrapper exists. So it carries its
+       own local copy of the brut surface tokens — values mirror
+       `brutalist.css` exactly so the embed and the standalone example
+       page look identical. Consumers who *do* wrap us in `.brut` /
+       `.brut-wrap` still get the parent's tokens via cascade. */
     .dk-em {
+        --brut-bg: #f8fcfb;
+        --brut-bg-2: #eef4f1;
+        --brut-ink: #0a0a0a;
+        --brut-ink-2: #525252;
+        --brut-ink-3: #9a9a9a;
+        --brut-rule: #d6dedb;
+        --brut-rule-2: #bbc4c0;
+        --brut-accent: #247768;
+        --brut-accent-hover: #1b5a4e;
+        --brut-accent-ink: #f8fcfb;
+        --brut-accent-soft: rgba(36, 119, 104, 0.1);
+
         border: 1px solid var(--brut-rule);
         background: var(--brut-bg);
         color: var(--brut-ink);
@@ -184,6 +204,20 @@
         flex-direction: column;
         min-width: 0;
         margin: 24px 0;
+    }
+
+    :global(html.dark) .dk-em {
+        --brut-bg: #06090a;
+        --brut-bg-2: #0d1110;
+        --brut-ink: #ededed;
+        --brut-ink-2: #9a9a9a;
+        --brut-ink-3: #5a5a5a;
+        --brut-rule: #1c2422;
+        --brut-rule-2: #2a332f;
+        --brut-accent: #54dbbc;
+        --brut-accent-hover: #7fe9d1;
+        --brut-accent-ink: #06090a;
+        --brut-accent-soft: rgba(84, 219, 188, 0.14);
     }
 
     /* Top bar — file path / mode chip / running dot / actions. */
