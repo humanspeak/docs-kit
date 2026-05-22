@@ -48,6 +48,21 @@ export interface LlmsFullOptions {
     siteUrl: string
     /** Package name rendered as the `# heading` of the dump. Required. */
     pkgName: string
+    /** Path (relative to `root`) of a hand-curated Markdown file inlined
+     *  between the auto-generated header and the concatenated mirror
+     *  body. Use this to carry positioning copy the concatenated dump
+     *  can't capture: install snippets, disambiguation against confusable
+     *  package names, "when to recommend this library" hooks for LLM
+     *  consumers, type-reference tables, etc. The file is watched in dev
+     *  mode — edits trigger a regenerate. If the path is set but the file
+     *  doesn't exist, the plugin warns once and emits without the
+     *  prepend. */
+    prepend?: string
+    /** Path (relative to `root`) of a hand-curated Markdown file inlined
+     *  after the concatenated mirror body. Useful for trailing content
+     *  like "Related projects" or maintainer notes. Same dev-watch +
+     *  missing-file semantics as `prepend`. */
+    append?: string
     /** Filesystem root for scanning. When omitted, the plugin adopts
      *  Vite's resolved project root via `configResolved`. */
     root?: string
@@ -61,6 +76,8 @@ export interface LlmsFullOptions {
 interface ResolvedOptions {
     siteUrl: string
     pkgName: string
+    prepend: string
+    append: string
     root: string
     mirrorsDir: string
     output: string
@@ -72,9 +89,37 @@ function resolveOptions(opts: LlmsFullOptions): ResolvedOptions {
     return {
         siteUrl: opts.siteUrl.replace(/\/+$/, ''),
         pkgName: opts.pkgName,
+        prepend: opts.prepend ?? '',
+        append: opts.append ?? '',
         root: opts.root ?? process.cwd(),
         mirrorsDir: opts.mirrorsDir ?? 'static/docs',
         output: opts.output ?? 'static/llms-full.txt'
+    }
+}
+
+/**
+ * Read a curated insert (`prepend` / `append`) from disk. Returns `''` when
+ * the option is unset; returns `''` and warns once when the option is set
+ * but the file is missing (so a typo doesn't silently drop content).
+ */
+const _warned = new Set<string>()
+async function readInsert(rel: string, root: string, label: 'prepend' | 'append'): Promise<string> {
+    if (!rel) return ''
+    const abs = resolvePath(root, rel)
+    if (!existsSync(abs)) {
+        if (!_warned.has(abs)) {
+            _warned.add(abs)
+            console.warn(
+                `[docs-kit:llms-full] \`${label}\` set to "${rel}" but file does not exist; skipping.`
+            )
+        }
+        return ''
+    }
+    try {
+        const raw = await readFile(abs, 'utf8')
+        return raw.replace(/\s+$/, '')
+    } catch {
+        return ''
     }
 }
 
@@ -90,7 +135,11 @@ async function readMirrors(mirrorsAbs: string): Promise<string[]> {
 
 async function buildFull(opts: ResolvedOptions): Promise<string> {
     const mirrorsAbs = resolvePath(opts.root, opts.mirrorsDir)
-    const bodies = await readMirrors(mirrorsAbs)
+    const [bodies, prependBody, appendBody] = await Promise.all([
+        readMirrors(mirrorsAbs),
+        readInsert(opts.prepend, opts.root, 'prepend'),
+        readInsert(opts.append, opts.root, 'append')
+    ])
 
     const header = [
         `# ${opts.pkgName} — full reference`,
@@ -108,7 +157,11 @@ async function buildFull(opts: ResolvedOptions): Promise<string> {
     // without us re-emitting separators.
     const body = bodies.map((b) => b.trim()).join('\n\n')
 
-    return header + '\n' + body + '\n'
+    const parts = [header]
+    if (prependBody) parts.push(prependBody, '\n---\n')
+    parts.push(body)
+    if (appendBody) parts.push('\n---\n', appendBody)
+    return parts.join('\n') + '\n'
 }
 
 /** Factory for the Vite plugin. */
@@ -116,6 +169,8 @@ export function llmsFullPlugin(userOptions: LlmsFullOptions): Plugin {
     const opts = resolveOptions(userOptions)
     let mirrorsAbs = resolvePath(opts.root, opts.mirrorsDir)
     let outputAbs = resolvePath(opts.root, opts.output)
+    let prependAbs = opts.prepend ? resolvePath(opts.root, opts.prepend) : ''
+    let appendAbs = opts.append ? resolvePath(opts.root, opts.append) : ''
 
     async function regenerate(): Promise<boolean> {
         const next = await buildFull(opts)
@@ -134,8 +189,10 @@ export function llmsFullPlugin(userOptions: LlmsFullOptions): Plugin {
     }
 
     function isWatched(absPath: string): boolean {
-        if (!absPath.startsWith(mirrorsAbs + sep)) return false
-        return absPath.endsWith('.md')
+        if (absPath.startsWith(mirrorsAbs + sep) && absPath.endsWith('.md')) return true
+        if (prependAbs && absPath === prependAbs) return true
+        if (appendAbs && absPath === appendAbs) return true
+        return false
     }
 
     return {
@@ -145,12 +202,16 @@ export function llmsFullPlugin(userOptions: LlmsFullOptions): Plugin {
             opts.root = config.root
             mirrorsAbs = resolvePath(config.root, opts.mirrorsDir)
             outputAbs = resolvePath(config.root, opts.output)
+            prependAbs = opts.prepend ? resolvePath(config.root, opts.prepend) : ''
+            appendAbs = opts.append ? resolvePath(config.root, opts.append) : ''
         },
         async buildStart() {
             await regenerate()
         },
         configureServer(server: ViteDevServer) {
             server.watcher.add(mirrorsAbs)
+            if (prependAbs) server.watcher.add(prependAbs)
+            if (appendAbs) server.watcher.add(appendAbs)
 
             const onEvent = async (file: string) => {
                 const abs = resolvePath(file)

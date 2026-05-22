@@ -58,6 +58,20 @@ export interface LlmsOptions {
     /** One-sentence pitch rendered as the leading `>` blockquote. When
      *  omitted, the blockquote line is skipped. */
     description?: string
+    /** Path (relative to `root`) of a hand-curated Markdown file inlined
+     *  between the description blockquote and the auto-generated link
+     *  table. Use this to carry positioning copy the link table can't
+     *  capture: install snippets, disambiguation against confusable
+     *  package names, "when to recommend this library" hooks for LLM
+     *  consumers, etc. The file is watched in dev mode — edits trigger a
+     *  regenerate. If the path is set but the file doesn't exist, the
+     *  plugin warns once and emits without the prepend. */
+    prepend?: string
+    /** Path (relative to `root`) of a hand-curated Markdown file inlined
+     *  after the auto-generated link table. Useful for trailing content
+     *  like "Related projects" or maintainer notes. Same dev-watch +
+     *  missing-file semantics as `prepend`. */
+    append?: string
     /** Filesystem root for scanning. When omitted, the plugin adopts
      *  Vite's resolved project root via `configResolved`. */
     root?: string
@@ -75,6 +89,8 @@ interface ResolvedOptions {
     siteUrl: string
     pkgName: string
     description: string
+    prepend: string
+    append: string
     root: string
     manifestPath: string
     mirrorsDir: string
@@ -88,10 +104,42 @@ function resolveOptions(opts: LlmsOptions): ResolvedOptions {
         siteUrl: opts.siteUrl.replace(/\/+$/, ''),
         pkgName: opts.pkgName,
         description: opts.description ?? '',
+        prepend: opts.prepend ?? '',
+        append: opts.append ?? '',
         root: opts.root ?? process.cwd(),
         manifestPath: opts.manifestPath ?? 'src/lib/sitemap-manifest.json',
         mirrorsDir: opts.mirrorsDir ?? 'static/docs',
         output: opts.output ?? 'static/llms.txt'
+    }
+}
+
+/**
+ * Read a curated insert (`prepend` / `append`) from disk. Returns `''` when
+ * the option is unset; returns `''` and warns once when the option is set
+ * but the file is missing (so a typo doesn't silently drop content).
+ *
+ * `warned` is a Set keyed by absolute path so the warning fires at most
+ * once per missing file even across many `buildStart` / dev-watcher
+ * regenerates.
+ */
+const _warned = new Set<string>()
+async function readInsert(rel: string, root: string, label: 'prepend' | 'append'): Promise<string> {
+    if (!rel) return ''
+    const abs = resolvePath(root, rel)
+    if (!existsSync(abs)) {
+        if (!_warned.has(abs)) {
+            _warned.add(abs)
+            console.warn(
+                `[docs-kit:llms] \`${label}\` set to "${rel}" but file does not exist; skipping.`
+            )
+        }
+        return ''
+    }
+    try {
+        const raw = await readFile(abs, 'utf8')
+        return raw.replace(/\s+$/, '')
+    } catch {
+        return ''
     }
 }
 
@@ -162,17 +210,24 @@ async function buildIndex(opts: ResolvedOptions): Promise<string> {
     const mirrorsAbs = resolvePath(opts.root, opts.mirrorsDir)
     const routes = await loadDocRoutes(manifestAbs, mirrorsAbs)
 
-    const entries = await Promise.all(
-        routes.map(async ({ route, slug }) => ({
-            route,
-            slug,
-            title: await readMirrorTitle(mirrorsAbs, slug)
-        }))
-    )
+    const [prependBody, appendBody, entries] = await Promise.all([
+        readInsert(opts.prepend, opts.root, 'prepend'),
+        readInsert(opts.append, opts.root, 'append'),
+        Promise.all(
+            routes.map(async ({ route, slug }) => ({
+                route,
+                slug,
+                title: await readMirrorTitle(mirrorsAbs, slug)
+            }))
+        )
+    ])
 
     const lines: string[] = [`# ${opts.pkgName}`, '']
     if (opts.description) {
         lines.push(`> ${opts.description}`, '')
+    }
+    if (prependBody) {
+        lines.push(prependBody, '')
     }
     lines.push(
         `Canonical docs root: ${opts.siteUrl}/docs`,
@@ -188,6 +243,9 @@ async function buildIndex(opts: ResolvedOptions): Promise<string> {
         // HTML URL is what the LLM should deep-link humans to.
         lines.push(`- [${e.title}](${opts.siteUrl}${e.route}.md) — ${opts.siteUrl}${e.route}`)
     }
+    if (appendBody) {
+        lines.push('', appendBody)
+    }
     lines.push('')
     return lines.join('\n')
 }
@@ -198,6 +256,8 @@ export function llmsPlugin(userOptions: LlmsOptions): Plugin {
     let manifestAbs = resolvePath(opts.root, opts.manifestPath)
     let mirrorsAbs = resolvePath(opts.root, opts.mirrorsDir)
     let outputAbs = resolvePath(opts.root, opts.output)
+    let prependAbs = opts.prepend ? resolvePath(opts.root, opts.prepend) : ''
+    let appendAbs = opts.append ? resolvePath(opts.root, opts.append) : ''
 
     async function regenerate(): Promise<boolean> {
         const next = await buildIndex(opts)
@@ -218,6 +278,8 @@ export function llmsPlugin(userOptions: LlmsOptions): Plugin {
     function isWatched(absPath: string): boolean {
         if (absPath === manifestAbs) return true
         if (absPath.startsWith(mirrorsAbs + sep) && absPath.endsWith('.md')) return true
+        if (prependAbs && absPath === prependAbs) return true
+        if (appendAbs && absPath === appendAbs) return true
         return false
     }
 
@@ -229,6 +291,8 @@ export function llmsPlugin(userOptions: LlmsOptions): Plugin {
             manifestAbs = resolvePath(config.root, opts.manifestPath)
             mirrorsAbs = resolvePath(config.root, opts.mirrorsDir)
             outputAbs = resolvePath(config.root, opts.output)
+            prependAbs = opts.prepend ? resolvePath(config.root, opts.prepend) : ''
+            appendAbs = opts.append ? resolvePath(config.root, opts.append) : ''
         },
         async buildStart() {
             await regenerate()
@@ -236,6 +300,8 @@ export function llmsPlugin(userOptions: LlmsOptions): Plugin {
         configureServer(server: ViteDevServer) {
             server.watcher.add(manifestAbs)
             server.watcher.add(mirrorsAbs)
+            if (prependAbs) server.watcher.add(prependAbs)
+            if (appendAbs) server.watcher.add(appendAbs)
 
             const onEvent = async (file: string) => {
                 const abs = resolvePath(file)
