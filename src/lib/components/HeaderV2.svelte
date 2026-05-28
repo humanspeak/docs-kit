@@ -312,8 +312,12 @@
         justify-content: center;
     }
     .dk-header-v2 :global(.dk-logo-img) {
+        flex: 0 0 1.5rem;
         height: 1.5rem;
+        min-width: 1.5rem;
         width: 1.5rem;
+        max-width: 1.5rem;
+        object-fit: contain;
     }
     .dk-mark {
         font-weight: 600;
