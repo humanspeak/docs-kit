@@ -17,7 +17,14 @@ const CARD_DIMENSIONS: Record<CardType, { width: number; height: number }> = {
     twitter: { width: 1200, height: 600 }
 }
 
-interface PageSeoData {
+/**
+ * Public type — one entry produces an `og-<slug>.png` and `twitter-<slug>.png`
+ * pair in `static/social-cards/`. Exported so consumers (and the Vite plugin)
+ * can build `extraPages` lists for routes whose `ogSlug` is constructed at
+ * runtime and isn't visible to the static regex scan of `+page.svelte` —
+ * `ComparisonPageV2` competitor pages are the canonical example.
+ */
+export interface PageSeoData {
     ogTitle: string
     ogTagline: string
     ogFeatures: string[]
@@ -47,6 +54,13 @@ export interface GenerateSocialCardsOptions {
     fontsDir?: string
     /** Optional path to blog content directory (e.g. 'src/content/blog'). Enables OG cards for blog posts. */
     blogContentDir?: string
+    /**
+     * Pages whose `ogSlug` can't be derived from a static literal in
+     * `+page.svelte` — typically routes rendered by a shared component
+     * (e.g. `ComparisonPageV2`) that builds the slug from a prop. Each
+     * entry produces one `og-<slug>.png` + `twitter-<slug>.png` pair.
+     */
+    extraPages?: PageSeoData[]
 }
 
 // ---------- HTML template (mirrors OG.svelte output) ----------
@@ -245,7 +259,8 @@ export async function generateSocialCards(options: GenerateSocialCardsOptions) {
         defaultDescription,
         defaultFeatures,
         rootDir,
-        blogContentDir
+        blogContentDir,
+        extraPages = []
     } = options
     const startTime = Date.now()
 
@@ -279,10 +294,10 @@ export async function generateSocialCards(options: GenerateSocialCardsOptions) {
     // Discover blog posts if content directory is provided
     const blogDir = blogContentDir ? path.join(rootDir, blogContentDir) : null
     const blogPages = blogDir ? await discoverBlogPosts(blogDir) : []
-    const allPages = [...pages, ...blogPages]
+    const allPages = [...pages, ...blogPages, ...extraPages]
 
     console.log(
-        `Found ${pages.length} pages + ${blogPages.length} blog posts with social card data`
+        `Found ${pages.length} pages + ${blogPages.length} blog posts + ${extraPages.length} extras with social card data`
     )
 
     // Build task list
