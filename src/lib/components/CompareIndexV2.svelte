@@ -63,7 +63,12 @@
     const pad2 = (n: number) => String(n).padStart(2, '0')
 
     const seo = getSeoContext()
-    $effect(() => {
+    // Apply SEO metadata. Synchronous call is what SSR sees — $effect is
+    // client-only and would otherwise leave the SSR HTML with the config
+    // fallback until hydration patched it. $effect still runs so client-side
+    // navigation that reuses this component instance stays reactive on prop
+    // change.
+    const applySeo = () => {
         if (!seo) return
         const namesList = competitors.map((c) => c.name).join(', ')
         seo.title = `Compare | ${ours.name} vs ${namesList}`
@@ -72,7 +77,9 @@
         seo.ogTagline = 'Honest, side-by-side comparisons.'
         seo.ogFeatures = ogFeatures
         seo.ogSlug = 'compare'
-    })
+    }
+    applySeo()
+    $effect(applySeo)
 
     const collectionJsonLd = $derived.by(() => {
         if (!emitJsonLd) return ''

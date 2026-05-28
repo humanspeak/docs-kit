@@ -24,14 +24,20 @@
 
     const seo = getSeoContext()
 
-    $effect(() => {
-        if (seo) {
-            seo.title = `${post.title} | ${config.name}`
-            seo.description = post.description
-            seo.ogSlug = post.ogSlug ?? `blog-${post.slug}`
-            seo.ogTitle = post.title
-        }
-    })
+    // Apply SEO metadata. Synchronous call is what SSR sees — $effect is
+    // client-only and would otherwise leave the SSR HTML with the config
+    // fallback until hydration patched it. $effect still runs so client-side
+    // navigation that reuses this component instance stays reactive on prop
+    // change.
+    const applySeo = () => {
+        if (!seo) return
+        seo.title = `${post.title} | ${config.name}`
+        seo.description = post.description
+        seo.ogSlug = post.ogSlug ?? `blog-${post.slug}`
+        seo.ogTitle = post.title
+    }
+    applySeo()
+    $effect(applySeo)
 
     const formattedDate = $derived(
         new Date(post.date).toLocaleDateString('en-US', {
@@ -44,7 +50,9 @@
 
 <BlogArticleJsonLd {post} {config} {basePath} />
 
-<article class="prose max-w-none text-text-primary prose-slate dark:prose-invert prose-headings:scroll-mt-20">
+<article
+    class="prose max-w-none text-text-primary prose-slate dark:prose-invert prose-headings:scroll-mt-20"
+>
     <header class="mb-8 border-b border-border pb-8">
         <div class="flex flex-wrap items-center gap-2 text-sm text-text-muted">
             <time datetime={post.date}>{formattedDate}</time>

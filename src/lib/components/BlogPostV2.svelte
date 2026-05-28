@@ -43,14 +43,20 @@
 
     const seo = getSeoContext()
 
-    $effect(() => {
-        if (seo) {
-            seo.title = `${post.title} | ${config.name}`
-            seo.description = post.description
-            seo.ogSlug = post.ogSlug ?? `blog-${post.slug}`
-            seo.ogTitle = post.title
-        }
-    })
+    // Apply SEO metadata. Synchronous call is what SSR sees — $effect is
+    // client-only and would otherwise leave the SSR HTML with the config
+    // fallback until hydration patched it. $effect still runs so client-side
+    // navigation that reuses this component instance stays reactive on prop
+    // change.
+    const applySeo = () => {
+        if (!seo) return
+        seo.title = `${post.title} | ${config.name}`
+        seo.description = post.description
+        seo.ogSlug = post.ogSlug ?? `blog-${post.slug}`
+        seo.ogTitle = post.title
+    }
+    applySeo()
+    $effect(applySeo)
 
     const formattedDate = $derived(
         new Date(post.date).toLocaleDateString('en-US', {

@@ -69,7 +69,12 @@
     }: Props = $props()
 
     const seo = getSeoContext()
-    $effect(() => {
+    // Apply SEO metadata. Synchronous call is what SSR sees — $effect is
+    // client-only and would otherwise leave the SSR HTML with the config
+    // fallback until hydration patched it. $effect still runs so client-side
+    // navigation that reuses this component instance stays reactive on prop
+    // change.
+    const applySeo = () => {
         if (!seo) return
         seo.title = `${ours.name} vs ${competitor.name} | Compare`
         seo.description = competitor.description
@@ -77,7 +82,9 @@
         seo.ogTagline = competitor.tagline
         seo.ogFeatures = ogFeatures
         seo.ogSlug = `compare-${competitor.slug}`
-    })
+    }
+    applySeo()
+    $effect(applySeo)
 
     const articleJsonLd = $derived.by(() => {
         if (!emitJsonLd) return ''
