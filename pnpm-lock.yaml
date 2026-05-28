@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@humanspeak/svelte-satori-fix':
-        specifier: ^0.0.3
-        version: 0.0.3(svelte@5.55.7(@typescript-eslint/types@8.59.3))
+        specifier: ^0.0.6
+        version: 0.0.6(svelte@5.55.7(@typescript-eslint/types@8.59.3))
       '@resvg/resvg-js':
         specifier: ^2.6.2
         version: 2.6.2
@@ -290,8 +290,8 @@ packages:
     peerDependencies:
       svelte: ^5.0.0
 
-  '@humanspeak/svelte-satori-fix@0.0.3':
-    resolution: {integrity: sha512-8oLATwSYZh8A/nGE1QAs5292jnBMkhBqgMtpMIl/fYzokgIR3Ds4J4ks81q+HTwTyGm7ID7tVUG/iWf7v5I3Jw==}
+  '@humanspeak/svelte-satori-fix@0.0.6':
+    resolution: {integrity: sha512-8ZvVrdm/OMxKGG/SNTEaemrUx0hyFzyccJOdGM9LQ/unt9837WtC6N4IffjJHLxJwmSEquwSHl1UKZGeHgWYQw==}
     peerDependencies:
       svelte: ^5.0.0
 
@@ -2411,7 +2411,7 @@ snapshots:
       - react
       - react-dom
 
-  '@humanspeak/svelte-satori-fix@0.0.3(svelte@5.55.7(@typescript-eslint/types@8.59.3))':
+  '@humanspeak/svelte-satori-fix@0.0.6(svelte@5.55.7(@typescript-eslint/types@8.59.3))':
     dependencies:
       svelte: 5.55.7(@typescript-eslint/types@8.59.3)
 

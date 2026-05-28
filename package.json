@@ -121,7 +121,7 @@
         "node": "24.13.0"
     },
     "dependencies": {
-        "@humanspeak/svelte-satori-fix": "^0.0.3",
+        "@humanspeak/svelte-satori-fix": "^0.0.6",
         "@resvg/resvg-js": "^2.6.2",
         "bits-ui": "^2.18.1",
         "clsx": "^2.1.1",
