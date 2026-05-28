@@ -1,2 +1,20 @@
-ignoredBuiltDependencies:
-    - '@sentry/cli'
+allowBuilds:
+    '@sentry/cli': false
+minimumReleaseAgeExclude:
+    - '@humanspeak/svelte-markdown@1.5.3'
+    - '@humanspeak/svelte-motion@0.5.4'
+    - '@humanspeak/svelte-satori-fix@0.0.6'
+    - '@lucide/svelte@1.17.0'
+    - '@sentry-internal/browser-utils@10.55.0'
+    - '@sentry-internal/feedback@10.55.0'
+    - '@sentry-internal/replay-canvas@10.55.0'
+    - '@sentry-internal/replay@10.55.0'
+    - '@sentry/browser@10.55.0'
+    - '@sentry/cloudflare@10.55.0'
+    - '@sentry/core@10.55.0'
+    - '@sentry/node-core@10.55.0'
+    - '@sentry/node@10.55.0'
+    - '@sentry/opentelemetry@10.55.0'
+    - '@sentry/svelte@10.55.0'
+    - '@sentry/sveltekit@10.55.0'
+    - svelte@5.55.10
