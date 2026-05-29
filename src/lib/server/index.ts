@@ -11,12 +11,4 @@ export {
     type PackageStats,
     type PackageStatsLoadOptions
 } from './package-stats.js'
-export {
-    createSitemapEntries,
-    createSitemapResponse,
-    createSitemapXml,
-    type CreateSitemapEntriesOptions,
-    type CreateSitemapResponseOptions,
-    type SitemapEntry,
-    type SitemapManifest
-} from './sitemap.js'
+export { createSitemapResponse, type CreateSitemapResponseOptions } from './sitemap.js'

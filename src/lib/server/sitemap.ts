@@ -1,21 +1,18 @@
-export type SitemapManifest = Record<string, string>
+type SitemapManifest = Record<string, string>
 
-export interface SitemapEntry {
+interface SitemapEntry {
     loc: string
     lastmod: string
     changefreq: string
     priority: string
 }
 
-export interface CreateSitemapEntriesOptions {
+export interface CreateSitemapResponseOptions {
     manifest: SitemapManifest
     siteUrl: string
     excludePrefixes?: string[]
     getChangefreq?: (route: string) => string
     getPriority?: (route: string) => string
-}
-
-export interface CreateSitemapResponseOptions extends CreateSitemapEntriesOptions {
     headers?: HeadersInit
 }
 
@@ -51,7 +48,7 @@ function getDefaultChangefreq(route: string): string {
     return 'monthly'
 }
 
-export function createSitemapEntries(options: CreateSitemapEntriesOptions): SitemapEntry[] {
+function createSitemapEntries(options: CreateSitemapResponseOptions): SitemapEntry[] {
     const {
         manifest,
         siteUrl,
@@ -73,7 +70,7 @@ export function createSitemapEntries(options: CreateSitemapEntriesOptions): Site
         }))
 }
 
-export function createSitemapXml(options: CreateSitemapEntriesOptions): string {
+function createSitemapXml(options: CreateSitemapResponseOptions): string {
     const entries = createSitemapEntries(options)
     const urls = entries
         .map(
