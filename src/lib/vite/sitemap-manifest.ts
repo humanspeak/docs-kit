@@ -33,6 +33,17 @@ import { dirname, join, relative, resolve as resolvePath, sep } from 'node:path'
 import type { Plugin, ViteDevServer } from 'vite'
 
 type SitemapManifest = Record<string, string>
+type SitemapPageData =
+    | string
+    | {
+          route: string
+          /** ISO `YYYY-MM-DD` last-modified date. Defaults to `source` mtime
+           *  when provided, otherwise today's date. */
+          lastmod?: string
+          /** File path, relative to `root` unless absolute, whose mtime should
+           *  drive this route. Useful for SvelteKit dynamic route entries. */
+          source?: string
+      }
 
 export interface SitemapManifestOptions {
     /** Filesystem root for scanning. When omitted, the plugin adopts
@@ -54,6 +65,11 @@ export interface SitemapManifestOptions {
     /** Route prefixes to exclude from the manifest (e.g. internal-only
      *  generators). Default `['/social-cards']`. */
     excludePrefixes?: string[]
+    /** Concrete routes to add after filesystem discovery. Use this for
+     *  prerendered dynamic routes such as `/compare/<slug>`, since the route
+     *  file itself is only a placeholder like `/compare/[slug]`. Mirrors
+     *  `socialCardsPlugin({ extraPages })` for runtime-built pages. */
+    extraPages?: SitemapPageData[]
 }
 
 interface ResolvedOptions {
@@ -62,6 +78,7 @@ interface ResolvedOptions {
     output: string
     blogDir: string | false
     excludePrefixes: string[]
+    extraPages: SitemapPageData[]
 }
 
 function resolveOptions(opts: SitemapManifestOptions): ResolvedOptions {
@@ -71,7 +88,8 @@ function resolveOptions(opts: SitemapManifestOptions): ResolvedOptions {
         routesDir: opts.routesDir ?? 'src/routes',
         output: opts.output ?? 'src/lib/sitemap-manifest.json',
         blogDir: opts.blogDir === false ? false : (opts.blogDir ?? 'src/content/blog'),
-        excludePrefixes: opts.excludePrefixes ?? ['/social-cards']
+        excludePrefixes: opts.excludePrefixes ?? ['/social-cards'],
+        extraPages: opts.extraPages ?? []
     }
 }
 
@@ -83,6 +101,26 @@ function toRoutePath(file: string, routesRoot: string): string {
     p = p.replace(/[\\/]\+page\.(svelte|svx|md)$/i, '')
     p = p.split(sep).join('/')
     return p === '' ? '/' : p
+}
+
+function isDynamicRoute(route: string): boolean {
+    return route.split('/').some((segment) => /^\[.+\]$/.test(segment))
+}
+
+function normalizeRoute(route: string): string {
+    return route.startsWith('/') ? route : `/${route}`
+}
+
+async function getExtraPageDate(page: SitemapPageData, root: string): Promise<string> {
+    if (typeof page !== 'string') {
+        if (page.lastmod) return page.lastmod
+        if (page.source) {
+            const source = resolvePath(root, page.source)
+            const s = await stat(source)
+            return new Date(s.mtimeMs).toISOString().slice(0, 10)
+        }
+    }
+    return new Date().toISOString().slice(0, 10)
 }
 
 /** Recursively walk `dir` and collect every `+page.{svelte,svx,md}` path. */
@@ -115,6 +153,7 @@ async function buildManifest(options: ResolvedOptions): Promise<string> {
     const manifest: SitemapManifest = {}
     for (const file of files) {
         const route = toRoutePath(file, routesRoot)
+        if (isDynamicRoute(route)) continue
         if (options.excludePrefixes.some((p) => route.startsWith(p))) continue
         const s = await stat(file)
         manifest[route] = new Date(s.mtimeMs).toISOString().slice(0, 10)
@@ -136,6 +175,12 @@ async function buildManifest(options: ResolvedOptions): Promise<string> {
         }
     }
 
+    for (const page of options.extraPages) {
+        const route = normalizeRoute(typeof page === 'string' ? page : page.route)
+        if (options.excludePrefixes.some((p) => route.startsWith(p))) continue
+        manifest[route] = await getExtraPageDate(page, options.root)
+    }
+
     return JSON.stringify(manifest, null, 2) + '\n'
 }
 
@@ -154,6 +199,13 @@ export function sitemapManifestPlugin(userOptions: SitemapManifestOptions = {}):
     let routesAbs = resolvePath(opts.root, opts.routesDir)
     let blogAbs = opts.blogDir ? resolvePath(opts.root, opts.blogDir) : null
     let outputAbs = resolvePath(opts.root, opts.output)
+    let extraPageSources = new Set(
+        opts.extraPages.flatMap((page) =>
+            typeof page === 'string' || page.source === undefined
+                ? []
+                : [resolvePath(opts.root, page.source)]
+        )
+    )
 
     async function regenerate(): Promise<boolean> {
         const next = await buildManifest(opts)
@@ -204,6 +256,13 @@ export function sitemapManifestPlugin(userOptions: SitemapManifestOptions = {}):
             routesAbs = resolvePath(config.root, opts.routesDir)
             blogAbs = opts.blogDir ? resolvePath(config.root, opts.blogDir) : null
             outputAbs = resolvePath(config.root, opts.output)
+            extraPageSources = new Set(
+                opts.extraPages.flatMap((page) =>
+                    typeof page === 'string' || page.source === undefined
+                        ? []
+                        : [resolvePath(config.root, page.source)]
+                )
+            )
         },
         async buildStart() {
             await regenerate()
@@ -218,13 +277,16 @@ export function sitemapManifestPlugin(userOptions: SitemapManifestOptions = {}):
             if (blogAbs) {
                 server.watcher.add(blogAbs)
             }
+            for (const source of extraPageSources) {
+                server.watcher.add(source)
+            }
 
             const onEvent = async (file: string) => {
                 // `findPageFiles` only finds files that exist, so for
                 // additions we need a wider net — match on the path
                 // pattern directly via `isWatched`.
                 const abs = relative('', file) ? resolvePath(file) : file
-                if (!isWatched(abs)) return
+                if (!isWatched(abs) && !extraPageSources.has(abs)) return
                 const changed = await regenerate()
                 if (changed) {
                     // The sitemap-manifest JSON is imported as a regular
