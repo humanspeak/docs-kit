@@ -18,6 +18,8 @@
     const tapScale = { scale: 0.9 }
     const hoverScaleLogo = { scale: 1.1 }
     const hoverScaleIcon = { scale: 1.05 }
+    const githubUrl = $derived(config.githubUrl ?? `https://github.com/${config.repo}`)
+    const npmUrl = $derived(config.npmUrl ?? `https://www.npmjs.com/package/${config.npmPackage}`)
 </script>
 
 <div>
@@ -75,7 +77,7 @@
             <ThemeToggle />
 
             <a
-                href="https://github.com/{config.repo}"
+                href={githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 class="inline-flex items-center justify-center text-text-muted hover:text-text-secondary"
@@ -90,7 +92,7 @@
                 </MotionDiv>
             </a>
             <a
-                href="https://www.npmjs.com/package/{config.npmPackage}"
+                href={npmUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 class="inline-flex items-center justify-center text-text-muted hover:text-text-secondary"

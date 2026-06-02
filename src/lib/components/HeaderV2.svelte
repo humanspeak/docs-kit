@@ -85,6 +85,8 @@
     const tapScale = { scale: 0.92 }
     const hoverScaleLogo = { scale: 1.06 }
     const hoverScaleIcon = { scale: 1.04 }
+    const githubUrl = $derived(config.githubUrl ?? `https://github.com/${config.repo}`)
+    const npmUrl = $derived(config.npmUrl ?? `https://www.npmjs.com/package/${config.npmPackage}`)
 </script>
 
 <svelte:window on:keydown={onKeydown} />
@@ -174,7 +176,7 @@
             {/if}
             <ThemeToggleV2 />
             <a
-                href="https://github.com/{config.repo}"
+                href={githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 class="dk-icon-link"
@@ -189,7 +191,7 @@
                 </MotionDiv>
             </a>
             <a
-                href="https://www.npmjs.com/package/{config.npmPackage}"
+                href={npmUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 class="dk-icon-link dk-npm-link"

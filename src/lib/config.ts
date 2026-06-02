@@ -5,8 +5,12 @@ export interface DocsKitConfig {
     slug: string
     /** npm package name, e.g. '@humanspeak/svelte-markdown' */
     npmPackage: string
+    /** Optional override for the header npm icon URL */
+    npmUrl?: string
     /** GitHub repo in owner/name format, e.g. 'humanspeak/svelte-markdown' */
     repo: string
+    /** Optional override for the header GitHub icon URL */
+    githubUrl?: string
     /** Canonical site URL, e.g. 'https://markdown.svelte.page' */
     url: string
     /** Short description for SEO */
