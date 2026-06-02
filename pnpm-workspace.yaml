@@ -1,6 +1,8 @@
 allowBuilds:
     '@sentry/cli': false
+minimumReleaseAge: 2880
 minimumReleaseAgeExclude:
+    - '@humanspeak/*'
     - '@humanspeak/svelte-markdown@1.5.3'
     - '@humanspeak/svelte-motion@0.5.4'
     - '@humanspeak/svelte-satori-fix@0.0.6'
