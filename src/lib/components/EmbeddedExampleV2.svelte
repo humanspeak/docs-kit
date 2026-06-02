@@ -28,7 +28,7 @@
   example route.
 -->
 <script lang="ts">
-    import { MotionA, MotionButton } from '@humanspeak/svelte-motion'
+    import { MotionA, MotionButton, MotionSpan } from '@humanspeak/svelte-motion'
     import ExternalLink from '@lucide/svelte/icons/external-link'
     import RotateCw from '@lucide/svelte/icons/rotate-cw'
     import type { Snippet } from 'svelte'
@@ -89,8 +89,10 @@
     })
 
     let refreshId = $state(0)
+    let refreshSpinKey = $state(0)
     const refresh = () => {
         refreshId++
+        refreshSpinKey++
     }
 
     const tapScale = { scale: 0.96 }
@@ -158,7 +160,16 @@
                 aria-label="Reset demo"
                 title="Reset example"
             >
-                <RotateCw size={11} />
+                {#key refreshSpinKey}
+                    <MotionSpan
+                        class="dk-em-reset-icon"
+                        initial={{ rotate: 0 }}
+                        animate={{ rotate: refreshSpinKey === 0 ? 0 : 360 }}
+                        transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                        <RotateCw size={11} />
+                    </MotionSpan>
+                {/key}
                 <span>reset</span>
             </MotionButton>
         {/if}
@@ -296,6 +307,10 @@
     .dk-em :global(.dk-em-ctrl:hover) {
         color: var(--brut-accent);
         border-color: var(--brut-accent);
+    }
+    .dk-em :global(.dk-em-reset-icon) {
+        display: inline-flex;
+        transform-origin: center;
     }
 
     /* Body — the demo claims the panel. */

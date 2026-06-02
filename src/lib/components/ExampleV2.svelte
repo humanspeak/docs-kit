@@ -31,7 +31,7 @@
 -->
 <script lang="ts">
     import SvelteMarkdown from '@humanspeak/svelte-markdown'
-    import { MotionA, MotionButton, MotionDiv } from '@humanspeak/svelte-motion'
+    import { MotionA, MotionButton, MotionDiv, MotionSpan } from '@humanspeak/svelte-motion'
     import ExternalLink from '@lucide/svelte/icons/external-link'
     import RotateCw from '@lucide/svelte/icons/rotate-cw'
     import type { Snippet } from 'svelte'
@@ -194,8 +194,10 @@
     )
 
     let refreshId = $state(0)
+    let refreshSpinKey = $state(0)
     const refresh = () => {
         refreshId++
+        refreshSpinKey++
     }
 
     const tapScale = { scale: 0.96 }
@@ -207,7 +209,9 @@
          the `.lede` blocks on the homepage so the page stitches into
          the same sheet vocabulary as the index and /compare. -->
     <div class="dk-ex-lede">
-        <div class="dk-ex-kicker">{figId}{#if tag}<span> / {tag}</span>{/if}</div>
+        <div class="dk-ex-kicker">
+            {figId}{#if tag}<span> / {tag}</span>{/if}
+        </div>
         <h2 class="dk-ex-title">
             {#if titleShape.prefix}{titleShape.prefix}{/if}<span>{titleShape.accent}</span
             >{#if titleShape.end}<span class="end">{titleShape.end}</span>{/if}
@@ -298,7 +302,16 @@
                     aria-label="Reset demo"
                     title="Reset example"
                 >
-                    <RotateCw size={11} />
+                    {#key refreshSpinKey}
+                        <MotionSpan
+                            class="dk-ex-reset-icon"
+                            initial={{ rotate: 0 }}
+                            animate={{ rotate: refreshSpinKey === 0 ? 0 : 360 }}
+                            transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+                        >
+                            <RotateCw size={11} />
+                        </MotionSpan>
+                    {/key}
                     <span>reset</span>
                 </MotionButton>
             {/if}
@@ -590,7 +603,14 @@
     .dk-ex :global(.dk-ex-ctrl.active) {
         color: var(--brut-accent);
         border-color: var(--brut-accent);
-        background: var(--brut-accent-soft, color-mix(in srgb, var(--brut-accent) 10%, transparent));
+        background: var(
+            --brut-accent-soft,
+            color-mix(in srgb, var(--brut-accent) 10%, transparent)
+        );
+    }
+    .dk-ex :global(.dk-ex-reset-icon) {
+        display: inline-flex;
+        transform-origin: center;
     }
     .dk-ex :global(.dk-ex-glyph) {
         font-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;

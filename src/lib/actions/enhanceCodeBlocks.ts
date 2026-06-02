@@ -164,13 +164,14 @@ const enhance = (container: HTMLElement) => {
         copyBtn.addEventListener('click', () => {
             const code = getCode(block)
             if (!code) return
-            navigator.clipboard.writeText(code).then(() => {
-                playCopySuccess(copyBtn, iconCopy, iconCheck)
-                // Hold the success state ~2s. `scheduleReset` clears any
-                // prior pending timer so a second click inside the window
-                // restarts the countdown from now, rather than letting the
-                // first click's reset snap the icon back early.
-                motionHandle.scheduleReset(2000)
+            playCopySuccess(copyBtn, iconCopy, iconCheck)
+            // Hold the success state ~2s. `scheduleReset` clears any
+            // prior pending timer so a second click inside the window
+            // restarts the countdown from now, rather than letting the
+            // first click's reset snap the icon back early.
+            motionHandle.scheduleReset(2000)
+            navigator.clipboard?.writeText(code).catch(() => {
+                /* clipboard blocked — fail quiet, the user can select + copy */
             })
         })
 

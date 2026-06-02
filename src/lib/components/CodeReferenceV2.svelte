@@ -33,9 +33,10 @@
   ```
 -->
 <script lang="ts">
-    import { MotionButton } from '@humanspeak/svelte-motion'
+    import { AnimatePresence, MotionButton, MotionSpan } from '@humanspeak/svelte-motion'
     import CheckIcon from '@lucide/svelte/icons/check'
     import CopyIcon from '@lucide/svelte/icons/copy'
+    import { onDestroy } from 'svelte'
 
     interface CodeSample {
         /** Stable identifier — surfaces as the small-caps tag on the left of
@@ -69,30 +70,38 @@
         columns === 'auto' ? Math.min(samples.length, 3) : Math.max(1, columns)
     )
 
-    // Track which cell most recently completed a successful copy so we can
-    // swap the icon to a check and reset after 1.6s. Keyed by sample id so
-    // multiple cells can show "copied" independently if the user clicks
-    // through them quickly.
+    // Track which cell most recently requested a copy so we can swap the icon
+    // to a check and reset after 1.6s. Keyed by sample id so multiple cells can
+    // show "copied" independently if the user clicks through them quickly.
     let copiedId = $state<string | null>(null)
     let copyResetTimer: ReturnType<typeof setTimeout> | null = null
 
+    const showCopyFeedback = (sampleId: string) => {
+        copiedId = sampleId
+        if (copyResetTimer) clearTimeout(copyResetTimer)
+        copyResetTimer = setTimeout(() => {
+            copiedId = null
+            copyResetTimer = null
+        }, 1600)
+    }
+
     const copy = async (sample: CodeSample) => {
+        showCopyFeedback(sample.id)
         if (typeof navigator === 'undefined' || !navigator.clipboard) return
         try {
             await navigator.clipboard.writeText(sample.code)
-            copiedId = sample.id
-            if (copyResetTimer) clearTimeout(copyResetTimer)
-            copyResetTimer = setTimeout(() => {
-                copiedId = null
-                copyResetTimer = null
-            }, 1600)
         } catch {
             /* clipboard blocked — fail quiet, the user can select + copy */
         }
     }
 
-    const tapScale = { scale: 0.94 }
-    const hoverScale = { scale: 1.05 }
+    onDestroy(() => {
+        if (copyResetTimer) clearTimeout(copyResetTimer)
+    })
+
+    const copyPress = { scale: 0.96 }
+    const copyHover = { scale: 1.03 }
+    const copyStateTransition = { duration: 0.16 }
 </script>
 
 <div class="dk-coderef" style="--dk-coderef-cols: {colCount}">
@@ -105,19 +114,39 @@
                 </div>
                 <MotionButton
                     type="button"
-                    class="dk-coderef-copy"
+                    class={copiedId === sample.id ? 'dk-coderef-copy copied' : 'dk-coderef-copy'}
                     aria-label="Copy {sample.label} snippet"
                     onclick={() => copy(sample)}
-                    whileTap={tapScale}
-                    whileHover={hoverScale}
+                    whileTap={copyPress}
+                    whileHover={copyHover}
                 >
-                    {#if copiedId === sample.id}
-                        <CheckIcon size={11} />
-                        <span>copied</span>
-                    {:else}
-                        <CopyIcon size={11} />
-                        <span>copy</span>
-                    {/if}
+                    <AnimatePresence initial={false}>
+                        {#if copiedId === sample.id}
+                            <MotionSpan
+                                key="copied"
+                                class="dk-coderef-copy-state copied-state"
+                                initial={{ opacity: 1, y: 0 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 0 }}
+                                transition={copyStateTransition}
+                            >
+                                <CheckIcon size={11} />
+                                <span>copied</span>
+                            </MotionSpan>
+                        {:else}
+                            <MotionSpan
+                                key="copy"
+                                class="dk-coderef-copy-state copy-state"
+                                initial={{ opacity: 1, y: 0 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 0 }}
+                                transition={copyStateTransition}
+                            >
+                                <CopyIcon size={11} />
+                                <span>copy</span>
+                            </MotionSpan>
+                        {/if}
+                    </AnimatePresence>
                 </MotionButton>
             </header>
             <div class="dk-coderef-code">
@@ -189,13 +218,19 @@
     .dk-coderef :global(.dk-coderef-copy) {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
+        justify-content: center;
+        box-sizing: border-box;
+        position: relative;
+        overflow: hidden;
+        width: 74px;
+        height: 24px;
         padding: 4px 9px;
         border: 1px solid var(--brut-rule);
         background: var(--brut-bg);
         color: var(--brut-ink-2);
         font-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
         font-size: 10.5px;
+        line-height: 1.2;
         text-transform: lowercase;
         letter-spacing: 0;
         cursor: pointer;
@@ -208,6 +243,29 @@
     .dk-coderef :global(.dk-coderef-copy:hover) {
         color: var(--brut-accent);
         border-color: var(--brut-accent);
+    }
+    .dk-coderef :global(.dk-coderef-copy.copied) {
+        border-color: var(--brut-accent);
+        background: var(
+            --brut-accent-soft,
+            color-mix(in srgb, var(--brut-accent) 10%, transparent)
+        );
+    }
+    .dk-coderef :global(.dk-coderef-copy-state) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        position: absolute;
+        inset: 0;
+        line-height: 1.2;
+        white-space: nowrap;
+    }
+    .dk-coderef :global(.dk-coderef-copy-state.copy-state) {
+        color: var(--brut-ink-2);
+    }
+    .dk-coderef :global(.dk-coderef-copy-state.copied-state) {
+        color: var(--brut-accent);
     }
 
     /* ── Code area — fills the cell so the scrollbar sits flush ───── */

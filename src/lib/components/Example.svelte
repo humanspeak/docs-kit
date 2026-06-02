@@ -4,7 +4,7 @@
   Uses MotionButton/MotionA for hover/tap effects.
 -->
 <script lang="ts">
-    import { MotionA, MotionButton } from '@humanspeak/svelte-motion'
+    import { MotionA, MotionButton, MotionSpan } from '@humanspeak/svelte-motion'
     import ExternalLink from '@lucide/svelte/icons/external-link'
     import LayoutGrid from '@lucide/svelte/icons/layout-grid'
     import RotateCw from '@lucide/svelte/icons/rotate-cw'
@@ -29,8 +29,10 @@
     })
 
     let refreshId = $state(0)
+    let refreshSpinKey = $state(0)
     const refresh = () => {
         refreshId++
+        refreshSpinKey++
     }
 
     const tapScale = { scale: 0.95 }
@@ -70,23 +72,34 @@
                 </MotionA>
             {/if}
             {#if sourceUrl}
-                <MotionButton
-                    onclick={() => window.open(sourceUrl, '_blank')}
+                <MotionA
+                    href={sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     whileTap={tapScale}
                     whileHover={hoverScale}
                     class="inline-flex items-center justify-center rounded-md border border-border px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:border-brand-500/50 hover:text-foreground"
                 >
                     {sourceHost}
-                </MotionButton>
+                </MotionA>
             {/if}
             <MotionButton
                 onclick={refresh}
                 whileTap={tapScale}
                 whileHover={hoverScale}
-                class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-brand-500/50 hover:text-foreground"
+                class="legacy-reset inline-flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-brand-500/50 hover:text-foreground"
                 title="Reset example"
             >
-                <RotateCw size={12} />
+                {#key refreshSpinKey}
+                    <MotionSpan
+                        class="legacy-reset-icon"
+                        initial={{ rotate: 0 }}
+                        animate={{ rotate: refreshSpinKey === 0 ? 0 : 360 }}
+                        transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                        <RotateCw size={12} />
+                    </MotionSpan>
+                {/key}
             </MotionButton>
         </div>
     </div>
@@ -145,5 +158,9 @@
                 color-mix(in srgb, var(--color-brand-500) 10%, transparent) 1.5px,
                 transparent 1.5px
             );
+    }
+    :global(.legacy-reset-icon) {
+        display: inline-flex;
+        transform-origin: center;
     }
 </style>
