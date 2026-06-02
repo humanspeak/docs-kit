@@ -56,6 +56,12 @@ import { generateSocialCards, type PageSeoData } from '../scripts/generate-socia
 
 export type { PageSeoData }
 
+const generationPromisesKey = Symbol.for('docs-kit:social-cards:generation-promises')
+
+interface SocialCardsGlobal {
+    [generationPromisesKey]?: Map<string, Promise<void>>
+}
+
 export interface SocialCardsOptions {
     /** npm package name, e.g. `'@humanspeak/svelte-markdown'`. Required. */
     npmPackage: string
@@ -98,15 +104,29 @@ export function socialCardsPlugin(userOptions: SocialCardsOptions): Plugin {
 
     let rootDir = userOptions.rootDir ?? process.cwd()
 
-    return {
-        name: 'docs-kit:social-cards',
-        apply: 'build',
-        configResolved(config) {
-            // Only adopt Vite's root when the consumer didn't pin one.
-            if (userOptions.rootDir === undefined) rootDir = config.root
-        },
-        async buildStart() {
-            await generateSocialCards({
+    async function generateOnce() {
+        // SvelteKit/Vite can run `buildStart` once per build environment
+        // (client and SSR) and may clone plugin instances between them. Social
+        // cards are static build artifacts, so one render pass per process and
+        // project/options key is enough; concurrent callers share it.
+        const globalState = globalThis as typeof globalThis & SocialCardsGlobal
+        const generationPromises =
+            globalState[generationPromisesKey] ?? new Map<string, Promise<void>>()
+        globalState[generationPromisesKey] = generationPromises
+
+        const generationKey = JSON.stringify({
+            rootDir,
+            npmPackage: userOptions.npmPackage,
+            defaultTitle: userOptions.defaultTitle,
+            defaultDescription: userOptions.defaultDescription,
+            defaultFeatures: userOptions.defaultFeatures,
+            blogContentDir: userOptions.blogContentDir,
+            extraPages: userOptions.extraPages
+        })
+
+        let generationPromise = generationPromises.get(generationKey)
+        if (!generationPromise) {
+            generationPromise = generateSocialCards({
                 npmPackage: userOptions.npmPackage,
                 defaultTitle: userOptions.defaultTitle,
                 defaultDescription: userOptions.defaultDescription,
@@ -115,6 +135,21 @@ export function socialCardsPlugin(userOptions: SocialCardsOptions): Plugin {
                 blogContentDir: userOptions.blogContentDir,
                 extraPages: userOptions.extraPages
             })
+            generationPromises.set(generationKey, generationPromise)
+        }
+
+        await generationPromise
+    }
+
+    return {
+        name: 'docs-kit:social-cards',
+        apply: 'build',
+        configResolved(config) {
+            // Only adopt Vite's root when the consumer didn't pin one.
+            if (userOptions.rootDir === undefined) rootDir = config.root
+        },
+        async buildStart() {
+            await generateOnce()
         }
     }
 }
