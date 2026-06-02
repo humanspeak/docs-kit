@@ -84,46 +84,70 @@ function buildOgHtml(opts: {
         svelteSvgDataUri
     } = opts
     const dims = CARD_DIMENSIONS[type]
-    const titleFontSize = type === 'og' ? '6rem' : '4.5rem'
-    const descFontSize = type === 'og' ? '2.25rem' : '1.875rem'
+    const titleFontSize = type === 'og' ? '86px' : '78px'
     const displayFeatures = features.slice(0, 4)
+    const displayTitle = title.toLowerCase()
+    const figureLabel = type === 'og' ? 'FIG-001 / SOCIAL' : 'FIG-002 / SOCIAL'
+    const sheetLabel = type === 'og' ? 'SHEET 01 / 01' : 'SHEET 02 / 02'
+    const featureCells = displayFeatures
+        .map(
+            (feature, i) =>
+                `<div style="box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 14px 16px; border-right: ${
+                    i === displayFeatures.length - 1 ? '0' : '1px solid #1c2422'
+                }; flex: 1;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; color: #5a635f; font-size: 11px; line-height: 1; font-weight: 800; text-transform: uppercase; font-family: 'lato-extrabold';">
+                        <span>NO ${String(i + 1).padStart(2, '0')}</span>
+                        <span style="display: flex; width: 10px; height: 10px; border: 1px solid ${
+                            i % 2 === 0 ? '#54dbbc' : '#5a635f'
+                        }; background-color: ${i % 2 === 0 ? '#54dbbc' : 'transparent'};"></span>
+                    </div>
+                    <div style="color: #ededed; font-size: 17px; line-height: 1.2; font-weight: 800; letter-spacing: 0; font-family: 'lato-extrabold';">${feature}</div>
+                </div>`
+        )
+        .join('')
 
-    return `<div style="display: flex; flex-direction: column; position: relative; overflow: hidden; background-color: #0a0a0a; padding: 4rem; color: #ffffff; width: ${dims.width}px; height: ${dims.height}px; font-family: 'lato';">
-    <div style="display: flex; position: absolute; top: -10rem; right: -10rem; height: 40rem; width: 40rem; border-radius: 9999px; background-image: radial-gradient(circle, rgba(255, 62, 0, 1) 0%, rgba(255, 62, 0, 0) 70%); opacity: 0.3;"></div>
-    <div style="display: flex; position: absolute; bottom: -10rem; left: -10rem; height: 700px; width: 700px; border-radius: 9999px; background-image: radial-gradient(circle, rgba(0, 216, 255, 1) 0%, rgba(0, 216, 255, 0) 70%); opacity: 0.15;"></div>
-    <div style="display: flex; position: absolute; top: 0; right: 0; bottom: 0; left: 0; background-image: linear-gradient(to right, #80808012 1px, transparent 1px), linear-gradient(to bottom, #80808012 1px, transparent 1px); background-size: 24px 24px;"></div>
-    <div style="display: flex; position: relative; height: 100%; flex-direction: column; justify-content: space-between;">
-        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <div style="display: flex; align-items: center; align-self: flex-start; gap: 0.5rem; border-radius: 9999px; border: 1px solid rgba(255, 255, 255, 0.1); background-color: rgba(255, 255, 255, 0.05); padding: 0.5rem 1rem; font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; letter-spacing: 0.025em; color: rgba(255, 255, 255, 0.8); text-transform: uppercase; font-family: 'lato';">
-                <img src="${humanspeakSvgDataUri}" width="16" height="16" style="height: 1rem; width: 1rem; opacity: 0.8;" />
+    return `<div style="box-sizing: border-box; display: flex; position: relative; overflow: hidden; background-color: #06090a; color: #ededed; width: ${dims.width}px; height: ${dims.height}px; font-family: 'lato';">
+    <div style="display: flex; position: absolute; top: 0; right: 0; width: 620px; height: 420px; background-image: radial-gradient(ellipse at top right, rgba(84, 219, 188, 0.16), rgba(84, 219, 188, 0) 62%);"></div>
+    <div style="display: flex; position: absolute; top: 34px; right: 34px; bottom: 34px; left: 34px; border: 1px solid #2a332f;"></div>
+    <div style="display: flex; position: absolute; top: 26px; left: 26px; width: 16px; height: 16px; border-top: 2px solid #54dbbc; border-left: 2px solid #54dbbc;"></div>
+    <div style="display: flex; position: absolute; top: 26px; right: 26px; width: 16px; height: 16px; border-top: 2px solid #54dbbc; border-right: 2px solid #54dbbc;"></div>
+    <div style="display: flex; position: absolute; bottom: 26px; left: 26px; width: 16px; height: 16px; border-bottom: 2px solid #54dbbc; border-left: 2px solid #54dbbc;"></div>
+    <div style="display: flex; position: absolute; right: 26px; bottom: 26px; width: 16px; height: 16px; border-right: 2px solid #54dbbc; border-bottom: 2px solid #54dbbc;"></div>
+    <div style="box-sizing: border-box; display: flex; position: absolute; top: 34px; right: 34px; bottom: 34px; left: 34px; flex-direction: column; padding: 42px 50px;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 10px; border: 1px solid #1c2422; background-color: #0d1110; padding: 8px 15px; color: #9aa39f; font-size: 13px; line-height: 1; font-weight: 800; text-transform: uppercase; white-space: nowrap; font-family: 'lato-extrabold';">
+                <span style="display: flex; width: 8px; height: 8px; background-color: #54dbbc;"></span>
                 <span>${npmPackage}</span>
             </div>
-            <h1 style="margin: 0; font-size: ${titleFontSize}; line-height: 1.1; font-weight: 800; letter-spacing: -0.05em; font-family: 'lato-extrabold';">${title}</h1>
-            <p style="margin: 0; font-size: ${descFontSize}; line-height: 1.375; max-width: 64rem; font-weight: 500; color: rgba(255, 255, 255, 0.7); font-family: 'lato';">${description}</p>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; color: #5a635f; font-size: 11px; line-height: 1.8; font-weight: 800; text-align: right; text-transform: uppercase; font-family: 'lato-extrabold';">
+                <span>${figureLabel}</span>
+                <span style="color: #ededed;">${sheetLabel}</span>
+                <span>SPRING · 2026</span>
+            </div>
         </div>
-        <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
-            ${displayFeatures
-                .map(
-                    (f) =>
-                        `<div style="display: flex; align-items: center; gap: 0.75rem; border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.1); background-color: rgba(255, 255, 255, 0.05); padding: 1rem 1.5rem; font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.9); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); font-family: 'lato';"><div style="display: flex; height: 0.625rem; width: 0.625rem; border-radius: 9999px; background-color: #ff3e00; box-shadow: 0 0 8px #ff3e00;"></div><span>${f}</span></div>`
-                )
-                .join('')}
+        <h1 style="display: block; max-width: 820px; margin: auto 0 0; color: #ededed; font-size: ${titleFontSize}; line-height: 0.88; font-weight: 800; letter-spacing: 0; text-transform: lowercase; font-family: 'lato-extrabold';">${displayTitle}</h1>
+        <p style="display: block; margin: 18px 0 26px; color: #9aa39f; font-size: 24px; line-height: 1.25; font-weight: 700; letter-spacing: 0; font-family: 'lato';">${description}</p>
+        <div style="display: flex; width: 100%; border: 1px solid #1c2422;">
+            ${featureCells}
         </div>
-        <div style="display: flex; width: 100%; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 1.5rem;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <img src="${humanspeakSvgDataUri}" width="48" height="48" style="height: 3rem; width: 3rem; opacity: 0.9;" />
-                    <div style="display: flex; flex-direction: column;">
-                        <span style="font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; letter-spacing: 0.05em; color: rgba(255, 255, 255, 0.5); text-transform: uppercase; font-family: 'lato';">Created by</span>
-                        <span style="font-size: 1.5rem; line-height: 2rem; font-weight: 700; letter-spacing: -0.025em; font-family: 'lato-extrabold';">Humanspeak</span>
-                    </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 24px;">
+            <div style="display: flex; align-items: center; gap: 14px; border: 1px solid #1c2422; background-color: #0d1110; padding: 12px 18px;">
+                <img src="${humanspeakSvgDataUri}" width="30" height="30" style="width: 30px; height: 30px;" />
+                <div style="display: flex; flex-direction: column; color: #5a635f; line-height: 1.25;">
+                    <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; font-family: 'lato-extrabold';">CREATED BY</span>
+                    <span style="color: #ededed; font-size: 20px; font-weight: 800; letter-spacing: 0; font-family: 'lato-extrabold';">Humanspeak</span>
                 </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 1rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.1); background-color: rgba(255, 255, 255, 0.05); padding: 1rem; padding-right: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);">
-                <img src="${svelteSvgDataUri}" width="48" height="48" style="height: 3rem; width: 3rem;" />
-                <div style="display: flex; flex-direction: column;">
-                    <span style="font-size: 0.75rem; line-height: 1rem; font-weight: 600; letter-spacing: 0.05em; color: #ff3e00; text-transform: uppercase; font-family: 'lato';">Built for</span>
-                    <span style="font-size: 1.25rem; line-height: 1.75rem; font-weight: 700; letter-spacing: -0.025em; font-family: 'lato-extrabold';">Svelte 5</span>
+            <div style="display: flex; align-items: center; gap: 12px; border: 1px solid #1c2422; background-color: #0d1110; padding: 12px 18px;">
+                <span style="display: flex; width: 26px; height: 26px; color: #54dbbc;">
+                    <svg viewBox="0 0 107 128" width="26" height="31" fill="none">
+                        <path d="M94.157 22.819c-10.4-14.885-30.94-19.297-45.792-9.835L22.282 29.608A29.92 29.92 0 0 0 8.764 49.65a31.5 31.5 0 0 0 3.108 20.231 30 30 0 0 0-4.477 11.183 31.9 31.9 0 0 0 5.448 24.116c10.402 14.887 30.942 19.297 45.791 9.835l26.083-16.624A29.92 29.92 0 0 0 98.235 78.35a31.53 31.53 0 0 0-3.105-20.232 30 30 0 0 0 4.474-11.182 31.88 31.88 0 0 0-5.447-24.116" fill="currentColor" />
+                        <path d="M45.817 106.582a20.72 20.72 0 0 1-22.237-8.243 19.17 19.17 0 0 1-3.277-14.503 18 18 0 0 1 .624-2.435l.49-1.498 1.337.981a33.6 33.6 0 0 0 10.203 5.098l.97.294-.09.968a5.85 5.85 0 0 0 1.052 3.878 6.24 6.24 0 0 0 6.695 2.485 5.8 5.8 0 0 0 1.603-.704L69.27 76.28a5.43 5.43 0 0 0 2.45-3.631 5.8 5.8 0 0 0-.987-4.371 6.24 6.24 0 0 0-6.698-2.487 5.7 5.7 0 0 0-1.6.704l-9.953 6.345a19 19 0 0 1-5.296 2.326 20.72 20.72 0 0 1-22.237-8.243 19.17 19.17 0 0 1-3.277-14.502 18 18 0 0 1 8.13-12.052l26.081-16.623a19 19 0 0 1 5.3-2.329A20.72 20.72 0 0 1 83.42 29.66a19.17 19.17 0 0 1 3.277 14.503 18 18 0 0 1-.624 2.435l-.49 1.498-1.337-.98a33.6 33.6 0 0 0-10.203-5.1l-.97-.294.09-.968a5.86 5.86 0 0 0-1.052-3.878 6.24 6.24 0 0 0-6.696-2.485 5.8 5.8 0 0 0-1.602.704L37.73 51.72a5.42 5.42 0 0 0-2.449 3.63 5.8 5.8 0 0 0 .986 4.372 6.24 6.24 0 0 0 6.698 2.486 5.8 5.8 0 0 0 1.602-.704l9.952-6.342a19 19 0 0 1 5.295-2.328 20.72 20.72 0 0 1 22.237 8.242 19.17 19.17 0 0 1 3.277 14.503 18 18 0 0 1-8.13 12.053l-26.081 16.622a19 19 0 0 1-5.3 2.328" fill="#06090a" />
+                    </svg>
+                </span>
+                <div style="display: flex; flex-direction: column; line-height: 1.25;">
+                    <span style="color: #54dbbc; font-size: 10px; font-weight: 800; text-transform: uppercase; font-family: 'lato-extrabold';">BUILT FOR</span>
+                    <span style="color: #ededed; font-size: 18px; font-weight: 800; letter-spacing: 0; font-family: 'lato-extrabold';">Svelte 5</span>
                 </div>
             </div>
         </div>
