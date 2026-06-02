@@ -9,23 +9,31 @@
         favicon?: string
     }>()
 
-    const canonicalUrl = $derived(`${$page.url.origin}${$page.url.pathname}`)
+    // Build URLs against the configured site origin rather than
+    // `$page.url.origin`. During SvelteKit prerender, the latter resolves to
+    // the sentinel `http://sveltekit-prerender`, which SvelteKit rewrites in
+    // `<link href>` attributes but NOT inside `<meta content="...">` — so
+    // og:image / twitter:image leaked the placeholder into production HTML
+    // and broke social previews. Trailing slash is stripped defensively so
+    // consumers can configure `url` with or without one.
+    const siteOrigin = $derived(config.url.replace(/\/+$/, ''))
+    const canonicalUrl = $derived(`${siteOrigin}${$page.url.pathname}`)
     const pageTitle = $derived($page.data?.title as string | undefined)
     const pageDesc = $derived($page.data?.description as string | undefined)
 
     const resolvedTitle = $derived(
-        seo.title
-            ?? (pageTitle
-                ? (pageTitle.includes(config.name) ? pageTitle : `${pageTitle} | ${config.name}`)
+        seo.title ??
+            (pageTitle
+                ? pageTitle.includes(config.name)
+                    ? pageTitle
+                    : `${pageTitle} | ${config.name}`
                 : config.name)
     )
-    const resolvedDescription = $derived(
-        seo.description ?? pageDesc ?? config.description
-    )
+    const resolvedDescription = $derived(seo.description ?? pageDesc ?? config.description)
     const ogImageUrl = $derived(
         seo.ogSlug
-            ? `${$page.url.origin}/social-cards/og-${seo.ogSlug}.png`
-            : `${$page.url.origin}/og-default.png`
+            ? `${siteOrigin}/social-cards/og-${seo.ogSlug}.png`
+            : `${siteOrigin}/og-default.png`
     )
 
     const websiteJsonLd = $derived(
