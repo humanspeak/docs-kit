@@ -26,6 +26,7 @@
  *
  * That's it — no `package.json` scripts to wire, no watcher to manage.
  */
+import { Buffer } from 'node:buffer'
 import { existsSync } from 'node:fs'
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, relative, resolve as resolvePath, sep } from 'node:path'
@@ -46,6 +47,14 @@ interface DemoManifestEntry {
 
 type DemoManifest = Record<string, DemoManifestEntry>
 
+interface DemoManifestIndexEntry {
+    importPath: string
+    codeBytes: number
+    htmlBytes: number
+}
+
+type DemoManifestIndex = Record<string, DemoManifestIndexEntry>
+
 export interface DemoManifestOptions {
     /** Filesystem root for scanning. When omitted, the plugin adopts
      *  Vite's resolved project root (`config.root`, i.e. the directory
@@ -61,6 +70,13 @@ export interface DemoManifestOptions {
      *  `src/lib/demo-manifest.json`. Keep it inside `src/lib/` so consumer
      *  pages can import it via the `$lib/` alias. */
     output?: string
+    /** Emit a lightweight index instead of the historical full manifest.
+     *  Heavy code + Shiki HTML payloads are served as virtual modules:
+     *  `virtual:docs-kit/demo/<example-path>/demos/Default.svelte`. */
+    split?: boolean
+    /** Virtual module prefix used when `split` is enabled. Most consumers
+     *  should keep the default. */
+    virtualPrefix?: string
     /** Shiki themes [light, dark]. Default mirrors what mdsvex uses elsewhere
      *  in docs-kit so colours stay consistent across surfaces. */
     themes?: [string, string]
@@ -102,6 +118,8 @@ export interface DemoManifestOptions {
 /** Stripped automatically — see `stripComments` / `stripWrappers` docs. */
 const DEFAULT_STRIP_COMMENTS = ['dk-strip']
 const DEFAULT_STRIP_WRAPPERS = ['dk-demo-shell']
+const DEFAULT_VIRTUAL_PREFIX = 'virtual:docs-kit/demo/'
+const RESOLVED_VIRTUAL_PREFIX = '\0docs-kit:demo:'
 
 interface ResolvedOptions {
     root: string
@@ -111,6 +129,8 @@ interface ResolvedOptions {
     langs: string[]
     stripComments: string[]
     stripWrappers: string[]
+    split: boolean
+    virtualPrefix: string
 }
 
 const DEFAULT_LANGS = ['svelte', 'typescript', 'javascript', 'html']
@@ -128,7 +148,9 @@ function resolveOptions(opts: DemoManifestOptions): ResolvedOptions {
         ),
         stripWrappers: Array.from(
             new Set([...DEFAULT_STRIP_WRAPPERS, ...(opts.stripWrappers ?? [])])
-        )
+        ),
+        split: opts.split ?? false,
+        virtualPrefix: opts.virtualPrefix ?? DEFAULT_VIRTUAL_PREFIX
     }
 }
 
@@ -554,6 +576,27 @@ async function buildManifestJson(
     return { manifest, json: JSON.stringify(manifest, null, 2) + '\n' }
 }
 
+function buildManifestIndexJson(manifest: DemoManifest, options: ResolvedOptions): string {
+    const index: DemoManifestIndex = {}
+    for (const [key, entry] of Object.entries(manifest)) {
+        index[key] = {
+            importPath: `${options.virtualPrefix}${key}`,
+            codeBytes: Buffer.byteLength(entry.code),
+            htmlBytes: Buffer.byteLength(entry.html.light) + Buffer.byteLength(entry.html.dark)
+        }
+    }
+    return JSON.stringify(index, null, 2) + '\n'
+}
+
+function normalizeVirtualDemoId(id: string, options: ResolvedOptions): string | null {
+    if (id.startsWith(RESOLVED_VIRTUAL_PREFIX)) {
+        return id.slice(RESOLVED_VIRTUAL_PREFIX.length)
+    }
+
+    if (!id.startsWith(options.virtualPrefix)) return null
+    return id.slice(options.virtualPrefix.length)
+}
+
 /**
  * Build a prettier formatter for Svelte source. Lazy-loads `prettier` +
  * `prettier-plugin-svelte` so the plugin doesn't pay the parse cost when
@@ -618,6 +661,7 @@ export function demoManifestPlugin(userOptions: DemoManifestOptions = {}): Plugi
     // would fail to find a file the plugin had actually written.
     let examplesAbs = resolvePath(opts.root, opts.examplesDir)
     let outputAbs = resolvePath(opts.root, opts.output)
+    let manifestCache: DemoManifest = {}
 
     // Singleton highlighter — created lazily on first run, reused across
     // every subsequent regeneration so we don't repeatedly pay shiki's
@@ -641,7 +685,9 @@ export function demoManifestPlugin(userOptions: DemoManifestOptions = {}): Plugi
     async function regenerate() {
         const files = await findDemoFiles(examplesAbs)
         const h = await getHighlighter()
-        const { json } = await buildManifestJson(files, opts, h)
+        const { manifest, json: fullJson } = await buildManifestJson(files, opts, h)
+        manifestCache = manifest
+        const json = opts.split ? buildManifestIndexJson(manifest, opts) : fullJson
 
         // Skip the write if the content hasn't changed — saves a no-op
         // round trip through Vite's watcher (which would otherwise see the
@@ -661,6 +707,24 @@ export function demoManifestPlugin(userOptions: DemoManifestOptions = {}): Plugi
         return true
     }
 
+    async function loadVirtualDemo(id: string) {
+        const key = normalizeVirtualDemoId(id, opts)
+        if (!key) return null
+
+        if (!manifestCache[key]) {
+            await regenerate()
+        }
+
+        const entry = manifestCache[key]
+        if (!entry) {
+            throw new Error(
+                `[docs-kit:demo-manifest] Unknown demo virtual module: ${opts.virtualPrefix}${key}`
+            )
+        }
+
+        return `export default ${JSON.stringify(entry)};\n`
+    }
+
     /** Test whether a path that just changed should retrigger generation:
      *  it must live under the examples dir AND inside a `demos/` segment. */
     function isWatchedDemoFile(absPath: string): boolean {
@@ -675,6 +739,14 @@ export function demoManifestPlugin(userOptions: DemoManifestOptions = {}): Plugi
         // Run before SvelteKit / svelte plugins so the manifest exists when
         // any +page.svelte that imports it is first resolved.
         enforce: 'pre',
+        resolveId(id) {
+            const key = normalizeVirtualDemoId(id, opts)
+            if (!key) return null
+            return `${RESOLVED_VIRTUAL_PREFIX}${key}`
+        },
+        async load(id) {
+            return loadVirtualDemo(id)
+        },
         configResolved(config) {
             // Honor an explicit `root` option from the consumer. Otherwise
             // adopt Vite's resolved project root — `config.root` is the

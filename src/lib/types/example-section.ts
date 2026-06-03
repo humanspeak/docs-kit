@@ -77,6 +77,23 @@ export interface DemoManifestEntry {
 }
 
 /**
+ * Shape of one entry in the split `demo-manifest.json` emitted when
+ * `demoManifestPlugin({ split: true })` is enabled. The heavy source and
+ * Shiki HTML live behind `importPath`, which can be loaded after hydration
+ * or when a code panel opens.
+ */
+export interface DemoManifestIndexEntry {
+    /** Virtual module import path for this demo's full `DemoManifestEntry`. */
+    importPath: string
+    /** Size of the copyable source text in bytes. Useful for diagnostics. */
+    codeBytes: number
+    /** Combined size of the light + dark Shiki HTML in bytes. */
+    htmlBytes: number
+}
+
+export type DemoManifestIndex = Record<string, DemoManifestIndexEntry>
+
+/**
  * Format an index + total into the brutalist sheet label, e.g.
  * `formatSheetLabel(0, 12) === "SHEET 01 / 12"`. Pure presentation — drop in
  * a custom formatter if your design needs a different cadence.

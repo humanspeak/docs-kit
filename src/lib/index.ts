@@ -47,6 +47,8 @@ export type { NavItem, NavSection } from './types/nav.js'
 export {
     formatSheetLabel,
     type DemoManifestEntry,
+    type DemoManifestIndex,
+    type DemoManifestIndexEntry,
     type ExampleSection
 } from './types/example-section.js'
 
