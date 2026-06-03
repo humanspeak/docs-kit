@@ -120,6 +120,7 @@ const DEFAULT_STRIP_COMMENTS = ['dk-strip']
 const DEFAULT_STRIP_WRAPPERS = ['dk-demo-shell']
 const DEFAULT_VIRTUAL_PREFIX = 'virtual:docs-kit/demo/'
 const RESOLVED_VIRTUAL_PREFIX = '\0docs-kit:demo:'
+const RESOLVED_VIRTUAL_SUFFIX = ':entry'
 
 interface ResolvedOptions {
     root: string
@@ -590,7 +591,10 @@ function buildManifestIndexJson(manifest: DemoManifest, options: ResolvedOptions
 
 function normalizeVirtualDemoId(id: string, options: ResolvedOptions): string | null {
     if (id.startsWith(RESOLVED_VIRTUAL_PREFIX)) {
-        return id.slice(RESOLVED_VIRTUAL_PREFIX.length)
+        const encoded = id
+            .slice(RESOLVED_VIRTUAL_PREFIX.length)
+            .replace(RESOLVED_VIRTUAL_SUFFIX, '')
+        return decodeURIComponent(encoded)
     }
 
     if (!id.startsWith(options.virtualPrefix)) return null
@@ -742,7 +746,7 @@ export function demoManifestPlugin(userOptions: DemoManifestOptions = {}): Plugi
         resolveId(id) {
             const key = normalizeVirtualDemoId(id, opts)
             if (!key) return null
-            return `${RESOLVED_VIRTUAL_PREFIX}${key}`
+            return `${RESOLVED_VIRTUAL_PREFIX}${encodeURIComponent(key)}${RESOLVED_VIRTUAL_SUFFIX}`
         },
         async load(id) {
             return loadVirtualDemo(id)

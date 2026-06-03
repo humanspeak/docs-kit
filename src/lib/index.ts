@@ -1,3 +1,5 @@
+/// <reference path="./virtual-demo.d.ts" />
+
 // Config
 export type { DocsKitConfig } from './config.js'
 
