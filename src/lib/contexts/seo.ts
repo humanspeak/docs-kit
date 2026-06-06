@@ -3,6 +3,11 @@ import { getContext, setContext } from 'svelte'
 export type SeoContext = {
     title?: string
     description?: string
+    h1?: {
+        title: string
+        id?: string
+        mode?: 'sr-only' | 'visible' | 'none'
+    }
     ogTitle?: string
     ogTagline?: string
     ogFeatures?: string[]

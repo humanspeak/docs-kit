@@ -78,6 +78,7 @@
         if (!seo) return
         seo.title = `${ours.name} vs ${competitor.name} | Compare`
         seo.description = competitor.description
+        seo.h1 = undefined
         seo.ogTitle = `vs ${competitor.name}`
         seo.ogTagline = competitor.tagline
         seo.ogFeatures = ogFeatures

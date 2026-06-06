@@ -33,6 +33,7 @@
         if (!seo) return
         seo.title = `${post.title} | ${config.name}`
         seo.description = post.description
+        seo.h1 = undefined
         seo.ogSlug = post.ogSlug ?? `blog-${post.slug}`
         seo.ogTitle = post.title
     }

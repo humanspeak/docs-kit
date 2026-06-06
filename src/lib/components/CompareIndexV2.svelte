@@ -73,6 +73,7 @@
         const namesList = competitors.map((c) => c.name).join(', ')
         seo.title = `Compare | ${ours.name} vs ${namesList}`
         seo.description = `See how ${ours.npmPackage} compares to ${namesList}. Honest, side-by-side comparisons with feature matrices and verdicts.`
+        seo.h1 = undefined
         seo.ogTitle = `${ours.name} vs Alternatives`
         seo.ogTagline = 'Honest, side-by-side comparisons.'
         seo.ogFeatures = ogFeatures

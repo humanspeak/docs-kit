@@ -11,6 +11,7 @@
     import BreadcrumbContextProvider from './BreadcrumbContextProvider.svelte'
     import BreadcrumbJsonLd from './BreadcrumbJsonLd.svelte'
     import SeoContextProvider from './SeoContextProvider.svelte'
+    import SeoH1 from './SeoH1.svelte'
     import SeoHead from './SeoHead.svelte'
 
     const {
@@ -34,42 +35,42 @@
     const softwareAppJsonLd = $derived(
         stars != null
             ? '<script type="application/ld+json">' +
-              JSON.stringify({
-                  '@context': 'https://schema.org',
-                  '@type': 'SoftwareApplication',
-                  name: config.name,
-                  description: config.description,
-                  url: config.url,
-                  downloadUrl: npmUrl,
-                  applicationCategory: 'DeveloperApplication',
-                  operatingSystem: 'Any',
-                  softwareRequirements: config.softwareRequirements ?? 'Svelte 5',
-                  license: 'https://opensource.org/licenses/MIT',
-                  keywords: config.keywords,
-                  releaseNotes: `${repoUrl}/releases`,
-                  ...(config.programmingLanguages
-                      ? { programmingLanguage: config.programmingLanguages }
-                      : {}),
-                  author: {
-                      '@type': 'Organization',
-                      name: 'Humanspeak, Inc.',
-                      url: 'https://humanspeak.com',
-                      sameAs: ['https://github.com/humanspeak', npmUrl, repoUrl]
-                  },
-                  offers: {
-                      '@type': 'Offer',
-                      price: '0',
-                      priceCurrency: 'USD'
-                  },
-                  aggregateRating: {
-                      '@type': 'AggregateRating',
-                      ratingValue: '5',
-                      ratingCount: String(stars),
-                      bestRating: '5'
-                  }
-              }) +
-              '<' +
-              '/script>'
+                  JSON.stringify({
+                      '@context': 'https://schema.org',
+                      '@type': 'SoftwareApplication',
+                      name: config.name,
+                      description: config.description,
+                      url: config.url,
+                      downloadUrl: npmUrl,
+                      applicationCategory: 'DeveloperApplication',
+                      operatingSystem: 'Any',
+                      softwareRequirements: config.softwareRequirements ?? 'Svelte 5',
+                      license: 'https://opensource.org/licenses/MIT',
+                      keywords: config.keywords,
+                      releaseNotes: `${repoUrl}/releases`,
+                      ...(config.programmingLanguages
+                          ? { programmingLanguage: config.programmingLanguages }
+                          : {}),
+                      author: {
+                          '@type': 'Organization',
+                          name: 'Humanspeak, Inc.',
+                          url: 'https://humanspeak.com',
+                          sameAs: ['https://github.com/humanspeak', npmUrl, repoUrl]
+                      },
+                      offers: {
+                          '@type': 'Offer',
+                          price: '0',
+                          priceCurrency: 'USD'
+                      },
+                      aggregateRating: {
+                          '@type': 'AggregateRating',
+                          ratingValue: '5',
+                          ratingCount: String(stars),
+                          bestRating: '5'
+                      }
+                  }) +
+                  '<' +
+                  '/script>'
             : null
     )
 </script>
@@ -90,5 +91,6 @@
         </MotionConfig>
         <BreadcrumbJsonLd {config} />
     </BreadcrumbContextProvider>
+    <SeoH1 {seo} />
     <SeoHead {seo} {config} {favicon} />
 </SeoContextProvider>
