@@ -91,21 +91,23 @@
                     <GitHubIcon class="size-3.5" />
                 </MotionDiv>
             </a>
-            <a
-                href={npmUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center justify-center text-text-muted hover:text-text-secondary"
-                aria-label="NPM"
-            >
-                <MotionDiv
-                    class="inline-flex size-6 items-center justify-center rounded-full border border-border-muted transition-colors hover:border-border-mid"
-                    whileTap={tapScale}
-                    whileHover={hoverScaleIcon}
+            {#if !config.hideNpm}
+                <a
+                    href={npmUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center justify-center text-text-muted hover:text-text-secondary"
+                    aria-label="NPM"
                 >
-                    <NpmIcon class="size-3.5" />
-                </MotionDiv>
-            </a>
+                    <MotionDiv
+                        class="inline-flex size-6 items-center justify-center rounded-full border border-border-muted transition-colors hover:border-border-mid"
+                        whileTap={tapScale}
+                        whileHover={hoverScaleIcon}
+                    >
+                        <NpmIcon class="size-3.5" />
+                    </MotionDiv>
+                </a>
+            {/if}
         </div>
     </header>
 </div>

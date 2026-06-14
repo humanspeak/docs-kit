@@ -190,21 +190,23 @@
                     <GitHubIcon class="size-3.5" />
                 </MotionDiv>
             </a>
-            <a
-                href={npmUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="dk-icon-link dk-npm-link"
-                aria-label="NPM"
-            >
-                <MotionDiv
-                    class="dk-icon-square"
-                    whileTap={tapScale}
-                    whileHover={hoverScaleIcon}
+            {#if !config.hideNpm}
+                <a
+                    href={npmUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="dk-icon-link dk-npm-link"
+                    aria-label="NPM"
                 >
-                    <NpmIcon class="size-3.5" />
-                </MotionDiv>
-            </a>
+                    <MotionDiv
+                        class="dk-icon-square"
+                        whileTap={tapScale}
+                        whileHover={hoverScaleIcon}
+                    >
+                        <NpmIcon class="size-3.5" />
+                    </MotionDiv>
+                </a>
+            {/if}
         </div>
     </div>
 

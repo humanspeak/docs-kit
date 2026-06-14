@@ -7,6 +7,12 @@ export interface DocsKitConfig {
     npmPackage: string
     /** Optional override for the header npm icon URL */
     npmUrl?: string
+    /**
+     * Hide the npm icon in the header. Set this on sites that aren't
+     * published as an npm package (e.g. a standalone product site) so the
+     * header shows only the GitHub icon.
+     */
+    hideNpm?: boolean
     /** GitHub repo in owner/name format, e.g. 'humanspeak/svelte-markdown' */
     repo: string
     /** Optional override for the header GitHub icon URL */
