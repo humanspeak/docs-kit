@@ -27,19 +27,21 @@
         class="flex items-center justify-between border-b border-border bg-background px-6 py-4 text-foreground"
     >
         <div class="flex items-center gap-2">
-            <a
-                href={resolve('/')}
-                aria-label="Home"
-                class="inline-flex items-center justify-center"
-            >
-                <MotionImg
-                    src={favicon}
-                    alt="logo"
-                    class="h-6 w-6 rounded-md"
-                    whileTap={tapScale}
-                    whileHover={hoverScaleLogo}
-                />
-            </a>
+            {#if !config.hideLogo}
+                <a
+                    href={resolve('/')}
+                    aria-label="Home"
+                    class="inline-flex items-center justify-center"
+                >
+                    <MotionImg
+                        src={favicon}
+                        alt="logo"
+                        class="h-6 w-6 rounded-md"
+                        whileTap={tapScale}
+                        whileHover={hoverScaleLogo}
+                    />
+                </a>
+            {/if}
             {#if breadcrumbContext && breadcrumbs.length > 0}
                 <nav aria-label="Breadcrumb">
                     <ol class="flex items-center space-x-2 text-sm">

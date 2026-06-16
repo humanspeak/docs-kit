@@ -13,6 +13,11 @@ export interface DocsKitConfig {
      * header shows only the GitHub icon.
      */
     hideNpm?: boolean
+    /**
+     * Hide the brand logo/favicon image in the header, leaving just the
+     * wordmark. Useful for sites that don't want a logo in the header chrome.
+     */
+    hideLogo?: boolean
     /** GitHub repo in owner/name format, e.g. 'humanspeak/svelte-markdown' */
     repo: string
     /** Optional override for the header GitHub icon URL */

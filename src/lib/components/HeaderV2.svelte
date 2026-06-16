@@ -94,19 +94,21 @@
 <header class="dk-header-v2">
     <div class="dk-header-row">
         <div class="dk-header-left">
-            <a
-                href={resolve('/')}
-                aria-label="Home"
-                class="dk-logo-link"
-            >
-                <MotionImg
-                    src={favicon}
-                    alt="logo"
-                    class="dk-logo-img"
-                    whileTap={tapScale}
-                    whileHover={hoverScaleLogo}
-                />
-            </a>
+            {#if !config.hideLogo}
+                <a
+                    href={resolve('/')}
+                    aria-label="Home"
+                    class="dk-logo-link"
+                >
+                    <MotionImg
+                        src={favicon}
+                        alt="logo"
+                        class="dk-logo-img"
+                        whileTap={tapScale}
+                        whileHover={hoverScaleLogo}
+                    />
+                </a>
+            {/if}
             <a href={resolve('/')} class="dk-mark" aria-label={config.name}>
                 <span class="dk-mark-head">{mark().head}</span>
                 {#if mark().tail}
