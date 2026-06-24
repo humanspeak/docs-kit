@@ -8,6 +8,7 @@
  */
 export { demoManifestPlugin, type DemoManifestOptions } from './demo-manifest.js'
 export { docMirrorsPlugin, type DocMirrorsOptions } from './doc-mirrors.js'
+export { exampleMirrorsPlugin, type ExampleMirrorsOptions } from './example-mirrors.js'
 export { indexNowPlugin, type IndexNowOptions } from './indexnow.js'
 export { llmsFullPlugin, type LlmsFullOptions } from './llms-full.js'
 export { llmsPlugin, type LlmsOptions } from './llms.js'

@@ -11,6 +11,7 @@
  * Inputs (both produced by sibling docs-kit plugins):
  *   - `src/lib/sitemap-manifest.json`  (from `sitemapManifestPlugin`)
  *   - `static/docs/<slug>.md`          (from `docMirrorsPlugin`)
+ *   - `static/examples*.md`            (from `exampleMirrorsPlugin`, optional)
  *
  * Output (gitignored — regenerated at `buildStart`):
  *   - `static/llms.txt`
@@ -81,6 +82,16 @@ export interface LlmsOptions {
     /** Directory (relative to `root`) holding the per-page mirrors written
      *  by `docMirrorsPlugin`. Default `static/docs`. */
     mirrorsDir?: string
+    /** Directory (relative to `root`) holding per-example mirrors written
+     *  by `exampleMirrorsPlugin`. Default `static/examples`. If the
+     *  directory does not exist, no examples section is emitted. */
+    exampleMirrorsDir?: string
+    /** File (relative to `root`) holding the examples index mirror written
+     *  by `exampleMirrorsPlugin`. Default `static/examples.md`. If the
+     *  file does not exist, the examples index link is skipped. */
+    exampleIndexOutput?: string
+    /** Canonical route for examples. Default `/examples`. */
+    examplesRoute?: string
     /** Output file (relative to `root`). Default `static/llms.txt`. */
     output?: string
 }
@@ -94,6 +105,9 @@ interface ResolvedOptions {
     root: string
     manifestPath: string
     mirrorsDir: string
+    exampleMirrorsDir: string
+    exampleIndexOutput: string
+    examplesRoute: string
     output: string
 }
 
@@ -109,6 +123,9 @@ function resolveOptions(opts: LlmsOptions): ResolvedOptions {
         root: opts.root ?? process.cwd(),
         manifestPath: opts.manifestPath ?? 'src/lib/sitemap-manifest.json',
         mirrorsDir: opts.mirrorsDir ?? 'static/docs',
+        exampleMirrorsDir: opts.exampleMirrorsDir ?? 'static/examples',
+        exampleIndexOutput: opts.exampleIndexOutput ?? 'static/examples.md',
+        examplesRoute: `/${(opts.examplesRoute ?? '/examples').replace(/^\/+|\/+$/g, '')}`,
         output: opts.output ?? 'static/llms.txt'
     }
 }
@@ -164,13 +181,19 @@ function slugToTitle(slug: string): string {
 async function readMirrorTitle(mirrorsAbs: string, slug: string): Promise<string> {
     const name = slug === '_index' ? 'index.md' : `${slug}.md`
     const path = join(mirrorsAbs, name)
-    if (!existsSync(path)) return slugToTitle(slug)
+    return readMarkdownTitle(path, slugToTitle(slug))
+}
+
+/** Read the H1 from a markdown file; fall back when the file is missing or
+ *  malformed. */
+async function readMarkdownTitle(path: string, fallback: string): Promise<string> {
+    if (!existsSync(path)) return fallback
     try {
         const src = await readFile(path, 'utf8')
         const h1 = src.match(/^#\s+(.+?)\s*$/m)
-        return h1 ? h1[1].trim() : slugToTitle(slug)
+        return h1 ? h1[1].trim() : fallback
     } catch {
-        return slugToTitle(slug)
+        return fallback
     }
 }
 
@@ -205,12 +228,43 @@ async function loadDocRoutes(
         }))
 }
 
+async function loadExampleEntries(
+    opts: ResolvedOptions
+): Promise<Array<{ route: string; title: string }>> {
+    const examples: Array<{ route: string; title: string }> = []
+    const indexAbs = resolvePath(opts.root, opts.exampleIndexOutput)
+    const exampleMirrorsAbs = resolvePath(opts.root, opts.exampleMirrorsDir)
+
+    if (existsSync(indexAbs)) {
+        examples.push({
+            route: opts.examplesRoute,
+            title: await readMarkdownTitle(indexAbs, 'Interactive Examples')
+        })
+    }
+
+    if (!existsSync(exampleMirrorsAbs)) return examples
+
+    const files = (await readdir(exampleMirrorsAbs)).filter((file) => file.endsWith('.md')).sort()
+    const entries = await Promise.all(
+        files.map(async (file) => {
+            const slug = file.replace(/\.md$/, '')
+            const route = `${opts.examplesRoute}/${slug}`
+            return {
+                route,
+                title: await readMarkdownTitle(join(exampleMirrorsAbs, file), slugToTitle(slug))
+            }
+        })
+    )
+
+    return [...examples, ...entries]
+}
+
 async function buildIndex(opts: ResolvedOptions): Promise<string> {
     const manifestAbs = resolvePath(opts.root, opts.manifestPath)
     const mirrorsAbs = resolvePath(opts.root, opts.mirrorsDir)
     const routes = await loadDocRoutes(manifestAbs, mirrorsAbs)
 
-    const [prependBody, appendBody, entries] = await Promise.all([
+    const [prependBody, appendBody, entries, exampleEntries] = await Promise.all([
         readInsert(opts.prepend, opts.root, 'prepend'),
         readInsert(opts.append, opts.root, 'append'),
         Promise.all(
@@ -219,7 +273,8 @@ async function buildIndex(opts: ResolvedOptions): Promise<string> {
                 slug,
                 title: await readMirrorTitle(mirrorsAbs, slug)
             }))
-        )
+        ),
+        loadExampleEntries(opts)
     ])
 
     const lines: string[] = [`# ${opts.pkgName}`, '']
@@ -243,6 +298,19 @@ async function buildIndex(opts: ResolvedOptions): Promise<string> {
         // HTML URL is what the LLM should deep-link humans to.
         lines.push(`- [${e.title}](${opts.siteUrl}${e.route}.md) — ${opts.siteUrl}${e.route}`)
     }
+    if (exampleEntries.length > 0) {
+        lines.push(
+            '',
+            `Canonical examples root: ${opts.siteUrl}${opts.examplesRoute}`,
+            `Per-example markdown mirrors: ${opts.siteUrl}${opts.examplesRoute}/<slug>.md`,
+            '',
+            '## Examples',
+            ''
+        )
+        for (const e of exampleEntries) {
+            lines.push(`- [${e.title}](${opts.siteUrl}${e.route}.md) — ${opts.siteUrl}${e.route}`)
+        }
+    }
     if (appendBody) {
         lines.push('', appendBody)
     }
@@ -255,6 +323,8 @@ export function llmsPlugin(userOptions: LlmsOptions): Plugin {
     const opts = resolveOptions(userOptions)
     let manifestAbs = resolvePath(opts.root, opts.manifestPath)
     let mirrorsAbs = resolvePath(opts.root, opts.mirrorsDir)
+    let exampleMirrorsAbs = resolvePath(opts.root, opts.exampleMirrorsDir)
+    let exampleIndexAbs = resolvePath(opts.root, opts.exampleIndexOutput)
     let outputAbs = resolvePath(opts.root, opts.output)
     let prependAbs = opts.prepend ? resolvePath(opts.root, opts.prepend) : ''
     let appendAbs = opts.append ? resolvePath(opts.root, opts.append) : ''
@@ -278,6 +348,8 @@ export function llmsPlugin(userOptions: LlmsOptions): Plugin {
     function isWatched(absPath: string): boolean {
         if (absPath === manifestAbs) return true
         if (absPath.startsWith(mirrorsAbs + sep) && absPath.endsWith('.md')) return true
+        if (absPath === exampleIndexAbs) return true
+        if (absPath.startsWith(exampleMirrorsAbs + sep) && absPath.endsWith('.md')) return true
         if (prependAbs && absPath === prependAbs) return true
         if (appendAbs && absPath === appendAbs) return true
         return false
@@ -290,6 +362,8 @@ export function llmsPlugin(userOptions: LlmsOptions): Plugin {
             opts.root = config.root
             manifestAbs = resolvePath(config.root, opts.manifestPath)
             mirrorsAbs = resolvePath(config.root, opts.mirrorsDir)
+            exampleMirrorsAbs = resolvePath(config.root, opts.exampleMirrorsDir)
+            exampleIndexAbs = resolvePath(config.root, opts.exampleIndexOutput)
             outputAbs = resolvePath(config.root, opts.output)
             prependAbs = opts.prepend ? resolvePath(config.root, opts.prepend) : ''
             appendAbs = opts.append ? resolvePath(config.root, opts.append) : ''
@@ -300,6 +374,8 @@ export function llmsPlugin(userOptions: LlmsOptions): Plugin {
         configureServer(server: ViteDevServer) {
             server.watcher.add(manifestAbs)
             server.watcher.add(mirrorsAbs)
+            server.watcher.add(exampleMirrorsAbs)
+            server.watcher.add(exampleIndexAbs)
             if (prependAbs) server.watcher.add(prependAbs)
             if (appendAbs) server.watcher.add(appendAbs)
 
