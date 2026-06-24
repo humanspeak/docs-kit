@@ -12,6 +12,13 @@
  * Each per-example mirror includes fenced Svelte source copied from
  * `src/lib/examples/<slug>/demos/*.svelte`, so coding agents can fetch
  * runnable examples without scraping the interactive UI.
+ *
+ * The examples landing page may expose a curated `const examples = [{ slug,
+ * title, tag, description }]` array to control index ordering and tags. When
+ * it doesn't — a missing landing page, or one that builds its list
+ * dynamically — the plugin discovers examples from the `examplesDir` route
+ * folder and derives the index from each page's SEO copy and primary section
+ * tag.
  */
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
@@ -165,8 +172,18 @@ async function parseExamplePages({
     )
 }
 
+/**
+ * Parse the optional curated `const examples = [{ slug, title, tag,
+ * description }]` index from the examples landing page. Returns `[]` when the
+ * page declares no such array — many sites build their index dynamically
+ * (`$derived`, a sitemap walk, etc.), in which case the plugin discovers
+ * examples straight from the route folder instead. A curated array, when
+ * present, drives ordering and the advertised tags.
+ */
 function parseExampleIndex(source: string): ExampleIndexItem[] {
-    const arraySource = extractConstArray(source, 'examples')
+    const arraySource = findConstArray(source, 'examples')
+    if (arraySource === null) return []
+
     const objects = splitTopLevelObjects(arraySource)
 
     return objects.map((objectSource) => ({
@@ -377,13 +394,16 @@ function renderExampleIndexMarkdown({
     pages: ExamplePageMirror[]
     opts: ResolvedOptions
 }): string {
+    // When no curated index array is present, build the list from the
+    // folder-discovered pages, advertising each example's primary section
+    // tag (falling back to a generic label only when a page has no sections).
     const indexItems =
         items.length > 0
             ? items
             : pages.map((page) => ({
                   slug: page.slug,
                   title: page.title,
-                  tag: 'EXAMPLE',
+                  tag: page.sections[0]?.tag ?? 'EXAMPLE',
                   description: page.description
               }))
     const pageDescriptions = new Map(pages.map((page) => [page.slug, page.description]))
@@ -428,13 +448,27 @@ function codeFence(source: string, language: string): string {
     return `${fence}${language}\n${source.trimEnd()}\n${fence}`
 }
 
-function extractConstArray(source: string, constName: string): string {
+/**
+ * Locate a `const <name> = [ … ]` array literal and return its inner source,
+ * or `null` when the file declares no such array (e.g. the index page builds
+ * its list dynamically). Callers that require the array use
+ * {@link extractConstArray}; callers that can fall back to folder discovery
+ * use this nullable form directly.
+ */
+function findConstArray(source: string, constName: string): string | null {
     const pattern = new RegExp(`const\\s+${constName}\\b[^=]*=\\s*\\[`)
     const match = pattern.exec(source)
-    if (!match)
-        throw new Error(`[docs-kit:example-mirrors] Could not find const ${constName} array`)
+    if (!match) return null
 
     return readBalanced(source, match.index + match[0].length - 1, '[', ']')
+}
+
+function extractConstArray(source: string, constName: string): string {
+    const arraySource = findConstArray(source, constName)
+    if (arraySource === null)
+        throw new Error(`[docs-kit:example-mirrors] Could not find const ${constName} array`)
+
+    return arraySource
 }
 
 function splitTopLevelObjects(source: string): string[] {
