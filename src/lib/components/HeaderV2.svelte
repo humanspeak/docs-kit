@@ -26,10 +26,12 @@
      *    rather than rounded-full pills.
      *  - Breadcrumbs use chevron separators and small caps to fit the sheet
      *    aesthetic.
-     *  - Responsive: at < 768px the inline nav collapses into a hamburger
-     *    button that opens an animated drawer beneath the header. At <
-     *    640px the breadcrumb hides from the header (it's still in the
-     *    drawer) and the NPM icon hides. Pure CSS media queries — no
+     *  - Responsive: at compact widths the version pill hides and split brand
+     *    marks drop the prefix (`svelte/motion` becomes `motion`). At < 768px
+     *    the inline nav collapses into a hamburger button that opens an
+     *    animated drawer beneath the header. At < 640px the breadcrumb hides
+     *    from the header (it's still in the drawer), and at < 480px the NPM
+     *    icon hides. Pure CSS media queries — no
      *    Tailwind class dependency, so the breakpoints work regardless of
      *    whether the consumer scans node_modules with their Tailwind setup.
      */
@@ -39,12 +41,7 @@
         external?: boolean
     }
 
-    const {
-        config,
-        favicon,
-        nav,
-        version
-    } = $props<{
+    const { config, favicon, nav, version } = $props<{
         config: DocsKitConfig
         favicon: string
         nav?: NavLink[]
@@ -95,11 +92,7 @@
     <div class="dk-header-row">
         <div class="dk-header-left">
             {#if !config.hideLogo}
-                <a
-                    href={resolve('/')}
-                    aria-label="Home"
-                    class="dk-logo-link"
-                >
+                <a href={resolve('/')} aria-label="Home" class="dk-logo-link">
                     <MotionImg
                         src={favicon}
                         alt="logo"
@@ -109,7 +102,12 @@
                     />
                 </a>
             {/if}
-            <a href={resolve('/')} class="dk-mark" aria-label={config.name}>
+            <a
+                href={resolve('/')}
+                class="dk-mark"
+                class:dk-mark-split={!!mark().tail}
+                aria-label={config.name}
+            >
                 <span class="dk-mark-head">{mark().head}</span>
                 {#if mark().tail}
                     <span class="dk-mark-slash">/</span><span class="dk-mark-tail"
@@ -184,11 +182,7 @@
                 class="dk-icon-link"
                 aria-label="GitHub"
             >
-                <MotionDiv
-                    class="dk-icon-square"
-                    whileTap={tapScale}
-                    whileHover={hoverScaleIcon}
-                >
+                <MotionDiv class="dk-icon-square" whileTap={tapScale} whileHover={hoverScaleIcon}>
                     <GitHubIcon class="size-3.5" />
                 </MotionDiv>
             </a>
@@ -251,8 +245,7 @@
 
 <style>
     .dk-header-v2 {
-        font-family:
-            'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+        font-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
         font-size: 12px;
         letter-spacing: 0;
         border-bottom: 1px solid var(--color-border-muted, rgba(127, 127, 127, 0.22));
@@ -348,9 +341,11 @@
         border: 1px solid var(--color-border-muted, rgba(127, 127, 127, 0.25));
         color: var(--color-text-muted, rgba(127, 127, 127, 0.9));
     }
-    /* Drop the version pill on narrow screens — it's the lowest-priority
-       chrome and reclaims width for the brand mark + breadcrumb. */
-    @media (max-width: 480px) {
+    /* Compact header: drop the low-priority version pill and shorten split
+       brand marks (`svelte/motion` -> `motion`) before the row gets crowded. */
+    @media (max-width: 1024px) {
+        .dk-mark-split .dk-mark-head,
+        .dk-mark-split .dk-mark-slash,
         .dk-version {
             display: none;
         }
@@ -412,7 +407,9 @@
         color: var(--color-text-muted, rgba(127, 127, 127, 0.9));
         text-decoration: none;
         border-right: 1px solid var(--color-border-muted, rgba(127, 127, 127, 0.18));
-        transition: background 0.15s, color 0.15s;
+        transition:
+            background 0.15s,
+            color 0.15s;
     }
     .dk-nav-link:last-child {
         border-right: 0;
@@ -447,7 +444,10 @@
         background: transparent;
         cursor: pointer;
         padding: 0;
-        transition: border-color 0.15s, background 0.15s, color 0.15s;
+        transition:
+            border-color 0.15s,
+            background 0.15s,
+            color 0.15s;
     }
     .dk-icon-link:hover :global(.dk-icon-square),
     .dk-menu-btn:hover {
