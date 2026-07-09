@@ -293,10 +293,11 @@ async function buildIndex(opts: ResolvedOptions): Promise<string> {
         ''
     )
     for (const e of entries) {
-        // Format: `- [Title](mirror.md) — canonical HTML URL`
+        // Format: `- [Title](mirror.md): canonical HTML URL`
+        // The `:` separator is what llmstxt.org specifies for link notes.
         // Both URLs are useful — the .md is the citation surface, the
         // HTML URL is what the LLM should deep-link humans to.
-        lines.push(`- [${e.title}](${opts.siteUrl}${e.route}.md) — ${opts.siteUrl}${e.route}`)
+        lines.push(`- [${e.title}](${opts.siteUrl}${e.route}.md): ${opts.siteUrl}${e.route}`)
     }
     if (exampleEntries.length > 0) {
         lines.push(
@@ -308,7 +309,7 @@ async function buildIndex(opts: ResolvedOptions): Promise<string> {
             ''
         )
         for (const e of exampleEntries) {
-            lines.push(`- [${e.title}](${opts.siteUrl}${e.route}.md) — ${opts.siteUrl}${e.route}`)
+            lines.push(`- [${e.title}](${opts.siteUrl}${e.route}.md): ${opts.siteUrl}${e.route}`)
         }
     }
     if (appendBody) {
