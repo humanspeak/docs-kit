@@ -343,7 +343,7 @@
     }
     /* Compact header: drop the low-priority version pill and shorten split
        brand marks (`svelte/motion` -> `motion`) before the row gets crowded. */
-    @media (max-width: 1024px) {
+    @media (max-width: 1279px) {
         .dk-mark-split .dk-mark-head,
         .dk-mark-split .dk-mark-slash,
         .dk-version {
