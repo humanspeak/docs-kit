@@ -81,7 +81,6 @@
                 <MotionA
                     href={current.previous.href}
                     class="dk-pager-cell dk-pager-prev"
-                    whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                 >
                     <span class="dk-pager-micro">↤ prev / № {pad2(current.previous.n)}</span>
@@ -100,7 +99,6 @@
                 <MotionA
                     href={current.next.href}
                     class="dk-pager-cell dk-pager-next"
-                    whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                 >
                     <span class="dk-pager-micro">next / № {pad2(current.next.n)} ↦</span>
@@ -123,6 +121,11 @@
         display: grid;
         grid-template-columns: 1fr auto 1fr;
         border-top: 1px solid var(--brut-rule-2);
+        /* The cells span the full viewport width; any transform poking past
+           the edge (browsers compute overflow post-transform) would flash
+           scrollbars. Hover feedback is the background shift; the tap scale
+           only shrinks — clip as a guard either way. */
+        overflow: hidden;
     }
 
     .dk-pager :global(.dk-pager-cell) {
