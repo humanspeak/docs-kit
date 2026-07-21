@@ -70,3 +70,11 @@ export interface BrutIndexFooter {
     /** Right-column info lines (and optional home link). Defaults to sheet/end-of-index/home. */
     right?: BrutIndexFooterRightEntry[]
 }
+
+/** One entry in a {@link PagerV2} collection; order defines `№` numbering. */
+export interface PagerItem {
+    /** Route href the cell links to (matched against the current pathname). */
+    href: string
+    /** Display label, already in display form (typically mono lowercase with trailing period). */
+    label: string
+}

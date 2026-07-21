@@ -28,6 +28,7 @@ export { default as FooterV2 } from './components/FooterV2.svelte'
 export { default as Header } from './components/Header.svelte'
 export { default as HeaderV2 } from './components/HeaderV2.svelte'
 export { default as OG } from './components/OG.svelte'
+export { default as PagerV2 } from './components/PagerV2.svelte'
 export { default as RootLayout } from './components/RootLayout.svelte'
 export { default as SeoContextProvider } from './components/SeoContextProvider.svelte'
 export { default as SeoH1 } from './components/SeoH1.svelte'
@@ -104,5 +105,6 @@ export type {
     BrutIndexHero,
     BrutIndexItem,
     BrutIndexLede,
-    BrutIndexMetaRow
+    BrutIndexMetaRow,
+    PagerItem
 } from './types/brut.js'
