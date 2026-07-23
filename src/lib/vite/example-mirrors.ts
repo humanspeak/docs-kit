@@ -3,15 +3,17 @@
  *
  * Walks `src/routes/examples/<slug>/+page.svelte` for docs-kit `ExampleV2`
  * pages, extracts their SEO copy, `ExampleSection[]` prose, note snippets,
- * and `demoCodeSample(...)` references, then writes LLM-friendly markdown
- * mirrors to:
+ * and `demoCodeSample(...)` references (site-local `demoCodeSamples(...)`
+ * wrappers are matched too), then writes LLM-friendly markdown mirrors to:
  *
  *   - `static/examples.md`
  *   - `static/examples/<slug>.md`
  *
  * Each per-example mirror includes fenced Svelte source copied from
- * `src/lib/examples/<slug>/demos/*.svelte`, so coding agents can fetch
- * runnable examples without scraping the interactive UI.
+ * `src/lib/examples/<slug>/demos/*.svelte` — plus every co-located `.svelte`
+ * component the demo imports, discovered by following the demo's relative
+ * import graph — so coding agents can fetch runnable examples without
+ * scraping the interactive UI.
  *
  * The examples landing page may expose a curated `const examples = [{ slug,
  * title, tag, description }]` array to control index ordering and tags. When
@@ -205,15 +207,24 @@ function parseExamplePage({ slug, source }: { slug: string; source: string }): E
     const sections = sectionObjects.map((objectSource) => {
         const notesName = optionalIdentifierField(objectSource, 'notes')
         const codeSnippetName = optionalIdentifierField(objectSource, 'codeSnippet')
+        const figId = requiredStringField(objectSource, 'figId')
+        const samples = codeSnippetName ? parseCodeSamples(snippets.get(codeSnippetName) ?? '') : []
+
+        if (codeSnippetName && samples.length === 0) {
+            console.warn(
+                `[docs-kit:example-mirrors] ${slug}#${figId}: codeSnippet \`${codeSnippetName}\` ` +
+                    'contains no demoCodeSample(...) calls — no source will be mirrored'
+            )
+        }
 
         return {
-            figId: requiredStringField(objectSource, 'figId'),
+            figId,
             tag: requiredStringField(objectSource, 'tag'),
             title: titleFromObject(requiredObjectField(objectSource, 'title')),
             description: requiredStringField(objectSource, 'description'),
             notes: notesName ? notesFromSnippet(snippets.get(notesName) ?? '') : [],
             barCells: parseBarCells(optionalArrayField(objectSource, 'barCells') ?? ''),
-            samples: codeSnippetName ? parseCodeSamples(snippets.get(codeSnippetName) ?? '') : []
+            samples
         }
     })
 
@@ -241,13 +252,18 @@ function parseSnippets(source: string): Map<string, string> {
     return snippets
 }
 
+/**
+ * Extract `(key, id, label)` triples from `demoCodeSample(...)` calls. Also
+ * matches site-local plural wrappers named `demoCodeSamples(...)`, which
+ * share the same leading arguments.
+ */
 function parseCodeSamples(source: string): DemoCodeSample[] {
     const samples: DemoCodeSample[] = []
-    const callPattern = /demoCodeSample\(/g
+    const callPattern = /\bdemoCodeSamples?\(/g
     let match: RegExpExecArray | null
 
     while ((match = callPattern.exec(source))) {
-        const argsStart = match.index + 'demoCodeSample'.length
+        const argsStart = match.index + match[0].length - 1
         const argsSource = readBalanced(source, argsStart, '(', ')')
         const args = splitTopLevelArguments(argsSource)
             .slice(0, 3)
@@ -368,21 +384,91 @@ async function renderExamplePageMarkdown({
 
         if (section.samples.length > 0) {
             lines.push('### Source', '')
+            const emitted = new Set<string>()
             for (const sample of section.samples) {
-                const sourcePath = resolvePath(opts.root, opts.demoDir, sample.key)
-                const source = await readFile(sourcePath, 'utf8')
-                const sourceLabel = `${opts.demoDir}/${sample.key}`
-                const sourceText = opts.sourceBaseUrl
-                    ? `[${sourceLabel}](${opts.sourceBaseUrl}/${sourceLabel})`
-                    : `\`${sourceLabel}\``
+                for (const file of await resolveSampleFiles(sample, opts)) {
+                    if (emitted.has(file.relPath)) continue
+                    emitted.add(file.relPath)
 
-                lines.push(`#### ${sample.label}`, '', `Source file: ${sourceText}`, '')
-                lines.push(codeFence(source, 'svelte'), '')
+                    const sourceText = opts.sourceBaseUrl
+                        ? `[${file.relPath}](${opts.sourceBaseUrl}/${file.relPath})`
+                        : `\`${file.relPath}\``
+
+                    lines.push(`#### ${file.label}`, '', `Source file: ${sourceText}`, '')
+                    lines.push(codeFence(file.source, 'svelte'), '')
+                }
             }
         }
     }
 
     return ensureTrailingNewline(lines.join('\n'))
+}
+
+interface SampleFile {
+    label: string
+    /** Path relative to the project root, e.g. `src/lib/examples/<slug>/demos/Foo.svelte`. */
+    relPath: string
+    source: string
+}
+
+/** Match relative `.svelte` import specifiers inside a demo source file. */
+function localSvelteImports(source: string): string[] {
+    const imports: string[] = []
+    const importRe = /\bimport\s+(?:[\s\S]*?\s+from\s+)?['"]([^'"]+\.svelte)['"]/g
+    let match: RegExpExecArray | null
+
+    while ((match = importRe.exec(source))) {
+        if (match[1].startsWith('.')) imports.push(match[1])
+    }
+
+    return imports
+}
+
+/**
+ * Read a sample's entry file plus every co-located `.svelte` component it
+ * transitively imports from inside the same example folder — the same
+ * import-graph walk `demoManifestPlugin` performs — so mirrors carry the
+ * full runnable source set rather than just the demo wrapper.
+ */
+async function resolveSampleFiles(
+    sample: DemoCodeSample,
+    opts: ResolvedOptions
+): Promise<SampleFile[]> {
+    const demoAbs = resolvePath(opts.root, opts.demoDir)
+    const entryAbs = resolvePath(demoAbs, sample.key)
+    const exampleRoot = sample.key.includes('/')
+        ? resolvePath(demoAbs, sample.key.split('/')[0])
+        : demoAbs
+    const files: SampleFile[] = [
+        {
+            label: sample.label,
+            relPath: `${opts.demoDir}/${sample.key}`,
+            source: await readFile(entryAbs, 'utf8')
+        }
+    ]
+    const seen = new Set([entryAbs])
+
+    const visit = async (fileAbs: string, source: string): Promise<void> => {
+        for (const specifier of localSvelteImports(source)) {
+            const resolved = resolvePath(dirname(fileAbs), specifier)
+            if (seen.has(resolved)) continue
+            if (!resolved.startsWith(exampleRoot + sep)) continue
+            if (!existsSync(resolved)) continue
+
+            seen.add(resolved)
+            const depSource = await readFile(resolved, 'utf8')
+            files.push({
+                label: resolved.split(sep).pop() ?? specifier,
+                relPath: `${opts.demoDir}/${relative(demoAbs, resolved).split(sep).join('/')}`,
+                source: depSource
+            })
+            await visit(resolved, depSource)
+        }
+    }
+
+    await visit(entryAbs, files[0].source)
+
+    return files
 }
 
 function renderExampleIndexMarkdown({
