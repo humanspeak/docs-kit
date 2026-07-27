@@ -47,7 +47,8 @@
                       softwareRequirements: config.softwareRequirements ?? 'Svelte 5',
                       license: 'https://opensource.org/licenses/MIT',
                       keywords: config.keywords,
-                      releaseNotes: `${repoUrl}/releases`,
+                      // A private repo's URLs are 404s for visitors — omit them.
+                      ...(config.hideGithub ? {} : { releaseNotes: `${repoUrl}/releases` }),
                       ...(config.programmingLanguages
                           ? { programmingLanguage: config.programmingLanguages }
                           : {}),
@@ -55,7 +56,11 @@
                           '@type': 'Organization',
                           name: 'Humanspeak, Inc.',
                           url: 'https://humanspeak.com',
-                          sameAs: ['https://github.com/humanspeak', npmUrl, repoUrl]
+                          sameAs: [
+                              'https://github.com/humanspeak',
+                              npmUrl,
+                              ...(config.hideGithub ? [] : [repoUrl])
+                          ]
                       },
                       offers: {
                           '@type': 'Offer',

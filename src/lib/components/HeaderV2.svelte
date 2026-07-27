@@ -175,17 +175,23 @@
                 </button>
             {/if}
             <ThemeToggleV2 />
-            <a
-                href={githubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="dk-icon-link"
-                aria-label="GitHub"
-            >
-                <MotionDiv class="dk-icon-square" whileTap={tapScale} whileHover={hoverScaleIcon}>
-                    <GitHubIcon class="size-3.5" />
-                </MotionDiv>
-            </a>
+            {#if !config.hideGithub}
+                <a
+                    href={githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="dk-icon-link"
+                    aria-label="GitHub"
+                >
+                    <MotionDiv
+                        class="dk-icon-square"
+                        whileTap={tapScale}
+                        whileHover={hoverScaleIcon}
+                    >
+                        <GitHubIcon class="size-3.5" />
+                    </MotionDiv>
+                </a>
+            {/if}
             {#if !config.hideNpm}
                 <a
                     href={npmUrl}

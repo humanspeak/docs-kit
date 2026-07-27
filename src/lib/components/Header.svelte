@@ -78,21 +78,23 @@
         <div class="flex items-center gap-4">
             <ThemeToggle />
 
-            <a
-                href={githubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center justify-center text-text-muted hover:text-text-secondary"
-                aria-label="GitHub"
-            >
-                <MotionDiv
-                    class="inline-flex size-6 items-center justify-center rounded-full border border-border-muted transition-colors hover:border-border-mid"
-                    whileTap={tapScale}
-                    whileHover={hoverScaleIcon}
+            {#if !config.hideGithub}
+                <a
+                    href={githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center justify-center text-text-muted hover:text-text-secondary"
+                    aria-label="GitHub"
                 >
-                    <GitHubIcon class="size-3.5" />
-                </MotionDiv>
-            </a>
+                    <MotionDiv
+                        class="inline-flex size-6 items-center justify-center rounded-full border border-border-muted transition-colors hover:border-border-mid"
+                        whileTap={tapScale}
+                        whileHover={hoverScaleIcon}
+                    >
+                        <GitHubIcon class="size-3.5" />
+                    </MotionDiv>
+                </a>
+            {/if}
             {#if !config.hideNpm}
                 <a
                     href={npmUrl}

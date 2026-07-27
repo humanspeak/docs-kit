@@ -18,6 +18,12 @@ export interface DocsKitConfig {
      * wordmark. Useful for sites that don't want a logo in the header chrome.
      */
     hideLogo?: boolean
+    /**
+     * Hide the GitHub icon in the header and omit the repo URL from JSON-LD
+     * (sameAs / releaseNotes). Set this on sites whose repository is private —
+     * linking visitors to a 404 repo helps nobody.
+     */
+    hideGithub?: boolean
     /** GitHub repo in owner/name format, e.g. 'humanspeak/svelte-markdown' */
     repo: string
     /** Optional override for the header GitHub icon URL */

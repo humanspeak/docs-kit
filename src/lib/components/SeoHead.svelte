@@ -51,7 +51,8 @@
                 logo: 'https://humanspeak.com/humanspeak.svg'
             },
             sameAs: [
-                `https://github.com/${config.repo}`,
+                // A private repo's URL is a 404 for visitors — omit it.
+                ...(config.hideGithub ? [] : [`https://github.com/${config.repo}`]),
                 `https://www.npmjs.com/package/${config.npmPackage}`
             ]
         })}</${'script'}>`
