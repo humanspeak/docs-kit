@@ -13,6 +13,7 @@
  *
  * Inputs:
  *   - `static/docs/<slug>.md`  (from `docMirrorsPlugin`)
+ *   - `static/compare/*.md`    (from `llmsPlugin`, optional)
  *
  * Output (gitignored — regenerated at `buildStart`):
  *   - `static/llms-full.txt`
@@ -71,6 +72,8 @@ export interface LlmsFullOptions {
     mirrorsDir?: string
     /** Output file (relative to `root`). Default `static/llms-full.txt`. */
     output?: string
+    /** Generated comparison mirrors directory. Default `static/compare`. */
+    comparisonMirrorsDir?: string
 }
 
 interface ResolvedOptions {
@@ -81,6 +84,7 @@ interface ResolvedOptions {
     root: string
     mirrorsDir: string
     output: string
+    comparisonMirrorsDir: string
 }
 
 function resolveOptions(opts: LlmsFullOptions): ResolvedOptions {
@@ -93,7 +97,8 @@ function resolveOptions(opts: LlmsFullOptions): ResolvedOptions {
         append: opts.append ?? '',
         root: opts.root ?? process.cwd(),
         mirrorsDir: opts.mirrorsDir ?? 'static/docs',
-        output: opts.output ?? 'static/llms-full.txt'
+        output: opts.output ?? 'static/llms-full.txt',
+        comparisonMirrorsDir: opts.comparisonMirrorsDir ?? 'static/compare'
     }
 }
 
@@ -135,8 +140,10 @@ async function readMirrors(mirrorsAbs: string): Promise<string[]> {
 
 async function buildFull(opts: ResolvedOptions): Promise<string> {
     const mirrorsAbs = resolvePath(opts.root, opts.mirrorsDir)
-    const [bodies, prependBody, appendBody] = await Promise.all([
+    const comparisonMirrorsAbs = resolvePath(opts.root, opts.comparisonMirrorsDir)
+    const [bodies, comparisonBodies, prependBody, appendBody] = await Promise.all([
         readMirrors(mirrorsAbs),
+        readMirrors(comparisonMirrorsAbs),
         readInsert(opts.prepend, opts.root, 'prepend'),
         readInsert(opts.append, opts.root, 'append')
     ])
@@ -160,6 +167,12 @@ async function buildFull(opts: ResolvedOptions): Promise<string> {
     const parts = [header]
     if (prependBody) parts.push(prependBody, '\n---\n')
     parts.push(body)
+    if (comparisonBodies.length > 0) {
+        parts.push(
+            '\n---\n\n<!-- Comparison mirrors -->\n\n',
+            comparisonBodies.map((comparison) => comparison.trim()).join('\n\n')
+        )
+    }
     if (appendBody) parts.push('\n---\n', appendBody)
     return parts.join('\n') + '\n'
 }
@@ -168,6 +181,7 @@ async function buildFull(opts: ResolvedOptions): Promise<string> {
 export function llmsFullPlugin(userOptions: LlmsFullOptions): Plugin {
     const opts = resolveOptions(userOptions)
     let mirrorsAbs = resolvePath(opts.root, opts.mirrorsDir)
+    let comparisonMirrorsAbs = resolvePath(opts.root, opts.comparisonMirrorsDir)
     let outputAbs = resolvePath(opts.root, opts.output)
     let prependAbs = opts.prepend ? resolvePath(opts.root, opts.prepend) : ''
     let appendAbs = opts.append ? resolvePath(opts.root, opts.append) : ''
@@ -190,6 +204,7 @@ export function llmsFullPlugin(userOptions: LlmsFullOptions): Plugin {
 
     function isWatched(absPath: string): boolean {
         if (absPath.startsWith(mirrorsAbs + sep) && absPath.endsWith('.md')) return true
+        if (absPath.startsWith(comparisonMirrorsAbs + sep) && absPath.endsWith('.md')) return true
         if (prependAbs && absPath === prependAbs) return true
         if (appendAbs && absPath === appendAbs) return true
         return false
@@ -201,6 +216,7 @@ export function llmsFullPlugin(userOptions: LlmsFullOptions): Plugin {
             if (userOptions.root !== undefined) return
             opts.root = config.root
             mirrorsAbs = resolvePath(config.root, opts.mirrorsDir)
+            comparisonMirrorsAbs = resolvePath(config.root, opts.comparisonMirrorsDir)
             outputAbs = resolvePath(config.root, opts.output)
             prependAbs = opts.prepend ? resolvePath(config.root, opts.prepend) : ''
             appendAbs = opts.append ? resolvePath(config.root, opts.append) : ''
@@ -210,6 +226,7 @@ export function llmsFullPlugin(userOptions: LlmsFullOptions): Plugin {
         },
         configureServer(server: ViteDevServer) {
             server.watcher.add(mirrorsAbs)
+            server.watcher.add(comparisonMirrorsAbs)
             if (prependAbs) server.watcher.add(prependAbs)
             if (appendAbs) server.watcher.add(appendAbs)
 

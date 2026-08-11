@@ -12,9 +12,11 @@
  *   - `src/lib/sitemap-manifest.json`  (from `sitemapManifestPlugin`)
  *   - `static/docs/<slug>.md`          (from `docMirrorsPlugin`)
  *   - `static/examples*.md`            (from `exampleMirrorsPlugin`, optional)
+ *   - comparison records supplied in `comparisons` (optional)
  *
  * Output (gitignored — regenerated at `buildStart`):
  *   - `static/llms.txt`
+ *   - `static/compare/index.md` and one mirror per competitor (when configured)
  *
  * Wiring (consumer's `vite.config.ts`):
  *
@@ -34,7 +36,8 @@
  *         llmsPlugin({
  *             siteUrl: 'https://example.com',
  *             pkgName: '@example/my-library',
- *             description: 'One-sentence pitch the LLM index leads with.'
+ *             description: 'One-sentence pitch the LLM index leads with.',
+ *             comparisons: { ours, competitors, priority: ['popular-library'] }
  *         })
  *     ]
  * })
@@ -50,6 +53,12 @@ import { existsSync } from 'node:fs'
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve as resolvePath, sep } from 'node:path'
 import type { Plugin, ViteDevServer } from 'vite'
+
+import {
+    orderCompetitors,
+    writeComparisonMirrors,
+    type ComparisonsOptions
+} from './compare-mirrors.js'
 
 export interface LlmsOptions {
     /** Canonical site URL used in the link table. Required. */
@@ -94,6 +103,8 @@ export interface LlmsOptions {
     examplesRoute?: string
     /** Output file (relative to `root`). Default `static/llms.txt`. */
     output?: string
+    /** Generate comparison mirrors and discovery links from rendered-page data. */
+    comparisons?: ComparisonsOptions
 }
 
 interface ResolvedOptions {
@@ -109,6 +120,7 @@ interface ResolvedOptions {
     exampleIndexOutput: string
     examplesRoute: string
     output: string
+    comparisons?: ComparisonsOptions
 }
 
 function resolveOptions(opts: LlmsOptions): ResolvedOptions {
@@ -126,7 +138,8 @@ function resolveOptions(opts: LlmsOptions): ResolvedOptions {
         exampleMirrorsDir: opts.exampleMirrorsDir ?? 'static/examples',
         exampleIndexOutput: opts.exampleIndexOutput ?? 'static/examples.md',
         examplesRoute: `/${(opts.examplesRoute ?? '/examples').replace(/^\/+|\/+$/g, '')}`,
-        output: opts.output ?? 'static/llms.txt'
+        output: opts.output ?? 'static/llms.txt',
+        comparisons: opts.comparisons
     }
 }
 
@@ -312,6 +325,17 @@ async function buildIndex(opts: ResolvedOptions): Promise<string> {
             lines.push(`- [${e.title}](${opts.siteUrl}${e.route}.md): ${opts.siteUrl}${e.route}`)
         }
     }
+    if (opts.comparisons) {
+        lines.push('', '## Comparisons', '')
+        for (const competitor of orderCompetitors(
+            opts.comparisons.competitors,
+            opts.comparisons.priority
+        )) {
+            lines.push(
+                `- [${competitor.name}](${opts.siteUrl}/compare/${competitor.slug}.md): ${opts.siteUrl}/compare/${competitor.slug}`
+            )
+        }
+    }
     if (appendBody) {
         lines.push('', appendBody)
     }
@@ -331,6 +355,7 @@ export function llmsPlugin(userOptions: LlmsOptions): Plugin {
     let appendAbs = opts.append ? resolvePath(opts.root, opts.append) : ''
 
     async function regenerate(): Promise<boolean> {
+        if (opts.comparisons) await writeComparisonMirrors(opts.root, opts.comparisons)
         const next = await buildIndex(opts)
         let current = ''
         if (existsSync(outputAbs)) {

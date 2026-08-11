@@ -6,6 +6,12 @@
  * concerns that can't be solved from inside Svelte components themselves
  * (filesystem scanning, manifest emission, etc.).
  */
+export {
+    buildComparisonMirrors,
+    orderCompetitors,
+    writeComparisonMirrors,
+    type ComparisonsOptions
+} from './compare-mirrors.js'
 export { demoManifestPlugin, type DemoManifestOptions } from './demo-manifest.js'
 export { docMirrorsPlugin, type DocMirrorsOptions } from './doc-mirrors.js'
 export { exampleMirrorsPlugin, type ExampleMirrorsOptions } from './example-mirrors.js'
