@@ -378,6 +378,67 @@
         padding: 0;
         font-size: inherit;
     }
+    .brut-post-body :global(.shiki-container) {
+        margin: 24px 0;
+        max-width: 100%;
+        overflow: hidden;
+        border: 1px solid var(--brut-rule);
+        background: var(--brut-bg-2);
+    }
+    .brut-post-body :global(.shiki-container pre) {
+        margin: 0;
+        border: 0;
+        padding: 16px 18px;
+        background: transparent;
+    }
+    .brut-post-body :global(.code-block-header) {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 7px 14px;
+        border-bottom: 1px solid var(--brut-rule);
+        background: var(--brut-bg);
+    }
+    .brut-post-body :global(.code-block-lang) {
+        color: var(--brut-ink-3);
+        font-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 10.5px;
+        font-weight: 500;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+    .brut-post-body :global(.code-block-copy) {
+        position: relative;
+        display: inline-flex;
+        width: 22px;
+        height: 22px;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 1px solid var(--brut-rule);
+        border-radius: 0;
+        background: var(--brut-bg-2);
+        color: var(--brut-ink-3);
+        cursor: pointer;
+        transition:
+            color 0.15s,
+            border-color 0.15s,
+            background 0.15s;
+    }
+    .brut-post-body :global(.code-block-copy:hover),
+    .brut-post-body :global(.code-block-copy.copied) {
+        border-color: var(--brut-accent);
+        color: var(--brut-accent);
+    }
+    .brut-post-body :global(.code-block-copy .icon-copy),
+    .brut-post-body :global(.code-block-copy .icon-check) {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin-top: -7px;
+        margin-left: -7px;
+    }
     .brut-post-body :global(.shiki-light),
     .brut-post-body :global(.shiki-dark) {
         width: 100%;
