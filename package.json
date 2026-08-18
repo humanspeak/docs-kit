@@ -95,7 +95,7 @@
         "@lucide/svelte": "^1.17.0",
         "@sentry/sveltekit": "^10.55.0",
         "@sveltejs/adapter-auto": "^7.0.1",
-        "@sveltejs/kit": "^2.61.1",
+        "@sveltejs/kit": "^2.70.2",
         "@sveltejs/package": "^2.5.7",
         "@sveltejs/vite-plugin-svelte": "^7.1.2",
         "@types/node": "^25.9.1",
