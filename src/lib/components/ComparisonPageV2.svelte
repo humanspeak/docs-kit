@@ -55,11 +55,6 @@
         emitJsonLd?: boolean
         /** ogFeatures override for the SEO context. */
         ogFeatures?: string[]
-        /**
-         * Override the `<title>` / SEO title. Defaults to
-         * `<competitor> vs <ours> | Compare`.
-         */
-        seoTitle?: string
     }
 
     const {
@@ -70,8 +65,7 @@
         examplesHref = '/examples',
         footerCta,
         emitJsonLd = true,
-        ogFeatures = ['Feature Comparison', 'Pros & Cons', 'Migration Guide', 'Honest Verdict'],
-        seoTitle
+        ogFeatures = ['Feature Comparison', 'Pros & Cons', 'Migration Guide', 'Honest Verdict']
     }: Props = $props()
 
     const seo = getSeoContext()
@@ -82,7 +76,7 @@
     // change.
     const applySeo = () => {
         if (!seo) return
-        seo.title = seoTitle ?? `${competitor.name} vs ${ours.name} | Compare`
+        seo.title = competitor.seoTitle ?? `${competitor.name} vs ${ours.name} | Compare`
         seo.description = competitor.description
         seo.h1 = undefined
         seo.ogTitle = `vs ${competitor.name}`

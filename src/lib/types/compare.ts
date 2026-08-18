@@ -48,6 +48,11 @@ export interface Competitor {
     verdict: string
     /** SEO keywords for the JSON-LD payload. */
     keywords: string[]
+    /**
+     * Optional override for the page `<title>` / SEO title. Defaults to
+     * `<name> vs <ours> | Compare`.
+     */
+    seoTitle?: string
 }
 
 /**
