@@ -287,8 +287,18 @@
         margin: 16px 0;
         padding-left: 22px;
     }
+    .brut-post-body :global(ul) {
+        list-style-type: disc;
+    }
+    .brut-post-body :global(ol) {
+        list-style-type: decimal;
+    }
     .brut-post-body :global(li) {
         margin: 6px 0;
+    }
+    .brut-post-body :global(li::marker) {
+        color: var(--brut-accent);
+        font-weight: 600;
     }
     .brut-post-body :global(strong) {
         color: var(--brut-ink);
@@ -367,6 +377,16 @@
         border: 0;
         padding: 0;
         font-size: inherit;
+    }
+    .brut-post-body :global(.shiki-light),
+    .brut-post-body :global(.shiki-dark) {
+        width: 100%;
+    }
+    :global(html:not(.dark)) .brut-post-body :global(.shiki-dark) {
+        display: none;
+    }
+    :global(html.dark) .brut-post-body :global(.shiki-light) {
+        display: none;
     }
 
     /* ── Footer link strip ───────────────────────────────────── */
