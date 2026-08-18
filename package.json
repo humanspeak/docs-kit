@@ -90,8 +90,8 @@
     "devDependencies": {
         "@eslint/compat": "^2.1.0",
         "@eslint/js": "^10.0.1",
-        "@humanspeak/svelte-markdown": "^1.5.3",
-        "@humanspeak/svelte-motion": "^0.5.4",
+        "@humanspeak/svelte-markdown": "^1.8.6",
+        "@humanspeak/svelte-motion": "^0.9.2",
         "@lucide/svelte": "^1.17.0",
         "@sentry/sveltekit": "^10.55.0",
         "@sveltejs/adapter-auto": "^7.0.1",
