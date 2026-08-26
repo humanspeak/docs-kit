@@ -1,5 +1,6 @@
 <script lang="ts">
     import { type Snippet } from 'svelte'
+    import HeartIcon from '@lucide/svelte/icons/heart'
     import { MotionSpan } from '@humanspeak/svelte-motion'
 
     /**
@@ -23,9 +24,7 @@
     }>()
 </script>
 
-<footer
-    class="dk-footer-v2 border-t border-border bg-background text-foreground"
->
+<footer class="dk-footer-v2 border-t border-border bg-background text-foreground">
     <div class="dk-footer-grid">
         <div class="dk-footer-cell dk-footer-meta">
             <span>{license}</span>
@@ -38,6 +37,10 @@
         </div>
         <div class="dk-footer-cell dk-footer-mid">
             <span>made with</span>
+            <!-- SVG heart, not the ❤️ emoji: in this monospace context the
+                 emoji's ink sits off-center in its advance box, so the scale
+                 beat visibly lurches sideways no matter where the transform
+                 origin sits. A vector glyph's box IS its ink. -->
             <MotionSpan
                 aria-label="Love"
                 animate={{ scale: [1, 1.2, 1, 1.1, 1] }}
@@ -50,7 +53,7 @@
                 style="transform-origin: center center; display: inline-block;"
                 class="dk-footer-heart"
             >
-                &#10084;&#65039;
+                <HeartIcon aria-hidden="true" class="dk-heart-glyph" />
             </MotionSpan>
             <span>by</span>
             <a
@@ -74,8 +77,7 @@
 
 <style>
     .dk-footer-v2 {
-        font-family:
-            'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+        font-family: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
         font-size: 11px;
         letter-spacing: 0.06em;
     }
@@ -109,6 +111,14 @@
     }
     :global(.dk-footer-heart) {
         line-height: 1;
+    }
+    /* Matches the ❤️ emoji this replaces: filled red, sized to the text. */
+    :global(.dk-footer-heart .dk-heart-glyph) {
+        display: block;
+        width: 1.1em;
+        height: 1.1em;
+        fill: #ef4444;
+        stroke: #ef4444;
     }
     .dk-footer-brand {
         color: var(--color-brand-500, #54dbbc);
