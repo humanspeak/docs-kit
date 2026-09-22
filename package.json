@@ -6,7 +6,7 @@
     "scripts": {
         "build": "svelte-kit sync && svelte-package",
         "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-        "test": "pnpm build && node --test src/lib/vite/*.test.mjs",
+        "test": "pnpm build && node --test src/lib/vite/*.test.mjs src/lib/components/*.test.mjs",
         "format": "prettier --write .",
         "lint": "prettier --check . && eslint .",
         "lint:fix": "npm run format && eslint . --fix",
