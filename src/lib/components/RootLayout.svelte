@@ -16,11 +16,12 @@
 
     const {
         config,
-        favicon = '/logo.svg',
+        favicon = '/favicon.png',
         stars,
         children
     }: {
         config: DocsKitConfig
+        /** Stable public PNG/ICO URL. Keep visible header logos separate. */
         favicon?: string
         stars?: number
         children: Snippet
