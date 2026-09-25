@@ -60,6 +60,9 @@ try {
 } finally {
     await server.close()
 }
+// Cloudflare emulators may retain handles after Vite closes. This standalone
+// check exits successfully only after validation and cleanup have completed.
+process.exit(0)
 ```
 
 Use a real nested route for the site. Put this check after **both** normal and
