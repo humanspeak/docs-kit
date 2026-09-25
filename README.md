@@ -43,7 +43,7 @@ await generateFavicon('src/lib/assets/logo.svg')
 After `vite build`, verify the rendered production HTML and served PNG using a
 Vite preview. This checks the homepage even if only nested paths are supplied,
 rejects duplicate, data, blob, relative, SVG, or hashed icon declarations, checks
-HTTP status, MIME type and dimensions, and compares PNG bytes against the source
+HTTP status, MIME type and dimensions, and compares decoded PNG pixels against the source
 logo to catch stale or copied placeholder assets:
 
 ```js
@@ -67,7 +67,7 @@ process.exit(0)
 
 Use a real nested route for the site. Put this check after **both** normal and
 deployment builds. For post-deploy verification, pass the public origin instead
-of starting a preview. The byte comparison validates consistency, not the artistic
+of starting a preview. Lossless PNG optimization is supported. The pixel comparison validates consistency, not the artistic
 identity of the SVG: visually review the source mark during setup. Then request
 homepage indexing in Search Console and record the request date. Google may take
 days or weeks to process the favicon, and display is not guaranteed. See

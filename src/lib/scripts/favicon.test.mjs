@@ -4,6 +4,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
+import { crc32 } from 'node:zlib'
 import {
     checkFavicon,
     faviconHref,
@@ -72,6 +73,15 @@ test('checks HTTP status, MIME type, nested routes, and source branding', async 
     await checkFavicon(options)
     assert.ok(visited.includes('/'))
     assert.ok(visited.includes('/docs/nested'))
+    // Different PNG bytes with identical visible pixels (e.g. lossless optimization).
+    const data = Buffer.from('tEXtComment\0optimized')
+    const chunk = Buffer.alloc(data.length + 8)
+    chunk.writeUInt32BE(data.length - 4, 0)
+    data.copy(chunk, 4)
+    chunk.writeUInt32BE(crc32(data), chunk.length - 4)
+    bytes = Buffer.concat([png.subarray(0, -12), chunk, png.subarray(-12)])
+    assert.notDeepEqual(bytes, png)
+    await checkFavicon(options)
     status = 404
     await assert.rejects(checkFavicon(options), /HTTP 404/)
     status = 200

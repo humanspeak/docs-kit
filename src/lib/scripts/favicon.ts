@@ -48,6 +48,16 @@ export function validatePng(png: Buffer): void {
     }
 }
 
+// Compare visible pixels so lossless PNG optimizers can change encoding/metadata.
+function faviconPixels(png: Buffer): Buffer {
+    const width = png.readUInt32BE(16)
+    const height = png.readUInt32BE(20)
+    return new Resvg(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><image width="${width}" height="${height}" href="data:image/png;base64,${png.toString('base64')}"/></svg>`,
+        { font: { loadSystemFonts: false } }
+    ).render().pixels
+}
+
 /** Verify a production preview or deployed site, including the bytes it serves. */
 export async function checkFavicon({
     origin,
@@ -58,7 +68,7 @@ export async function checkFavicon({
     logo: string
     paths?: string[]
 }): Promise<void> {
-    const expected = await renderFavicon(logo)
+    const expected = faviconPixels(await renderFavicon(logo))
     for (const path of new Set(['/', ...paths])) {
         const response = await fetch(new URL(path, origin), { signal: AbortSignal.timeout(30_000) })
         if (!response.ok) throw new Error(`${path} returned HTTP ${response.status}`)
@@ -72,7 +82,7 @@ export async function checkFavicon({
         }
         const actual = Buffer.from(await icon.arrayBuffer())
         validatePng(actual)
-        if (!actual.equals(expected)) {
+        if (!faviconPixels(actual).equals(expected)) {
             throw new Error(`${href} does not match ${logo}; regenerate the branded favicon`)
         }
     }
