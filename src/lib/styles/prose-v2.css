@@ -43,6 +43,10 @@
 .prose-v2 :is(h1, h2, h3, h4, h5, h6) code {
     text-transform: none;
 }
+/* Headings tagged by `rehypeKeepCase` (identifiers, signatures) keep their case. */
+.prose-v2 :is(h1, h2, h3, h4, h5, h6).dk-keep-case {
+    text-transform: none;
+}
 .prose-v2 h1 {
     font-size: 2.4em;
     line-height: 1.05;

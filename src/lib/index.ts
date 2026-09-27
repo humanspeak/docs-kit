@@ -57,6 +57,7 @@ export {
 } from './types/example-section.js'
 
 // Utilities
+export { rehypeKeepCase } from './mdsvex/index.js'
 export {
     buildCompareBreadcrumbs,
     type BuildCompareBreadcrumbsOptions,
