@@ -34,15 +34,19 @@ const addClass = (node: HastNode, className: string) => {
  * theme's lowercase heading rule leaves their authored casing alone. Runs at
  * build time, so server-rendered HTML is already correct.
  *
+ * Pass the plugin itself (not a call): unified invokes it to obtain the
+ * transformer.
+ *
  * @example
  * ```js
  * // svelte.config.js
  * import { rehypeKeepCase } from '@humanspeak/docs-kit/mdsvex'
- * mdsvex({ rehypePlugins: [rehypeKeepCase()] })
+ * mdsvex({ rehypePlugins: [rehypeKeepCase] })
  * ```
  */
 export const rehypeKeepCase = () => (tree: HastNode) => {
-    const visit = (node: HastNode) => {
+    const visit = (node: HastNode | undefined) => {
+        if (!node) return
         if (node.type === 'element' && node.tagName && HEADING.test(node.tagName)) {
             if (keepsCase(textOf(node))) addClass(node, 'dk-keep-case')
         }
