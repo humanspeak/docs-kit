@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { test } from 'node:test'
 import { compile } from 'svelte/compiler'
 
-test('DocsLayoutV2 renders an optional pager snippet inside main, above the footer, on brut-tokens', async () => {
+test('DocsLayoutV2 renders an optional pager snippet in the content column, above the footer, on brut-tokens', async () => {
     const source = await readFile(new URL('./DocsLayoutV2.svelte', import.meta.url), 'utf8')
     const { code } = compile(source, { filename: 'DocsLayoutV2.svelte', generate: 'server' }).js
     assert.match(source, /pager\?: Snippet/)

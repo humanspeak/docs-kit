@@ -68,9 +68,10 @@
         sitemapManifest?: Record<string, string>
         children: Snippet
         /**
-         * Optional prev/next strip (typically `PagerV2`), rendered full-width at the
-         * bottom of the main column, flush above the footer, with the brutalist
-         * tokens available but no separate background.
+         * Optional prev/next strip (typically `PagerV2`), rendered at the bottom of
+         * the content column (beneath the article, not under the table of
+         * contents), flush above the footer, with the brutalist tokens available
+         * but no separate background.
          */
         pager?: Snippet
     }
@@ -240,20 +241,31 @@
         </aside>
 
         <!-- Main content area -->
-        <main class="flex min-w-0 flex-1 flex-col">
-            <div class="flex min-w-0 flex-1">
-                <!-- Content -->
-                <article
-                    bind:this={contentElement}
-                    use:enhanceCodeBlocks
-                    class="min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-8"
-                >
-                    <div
-                        class="prose-v2 prose max-w-none text-text-primary prose-slate dark:prose-invert prose-headings:scroll-mt-20"
+        <main class="min-w-0 flex-1">
+            <div class="flex min-w-0 min-h-full">
+                <!-- Content column: article plus the optional pager pinned beneath it -->
+                <div class="flex min-w-0 flex-1 flex-col">
+                    <article
+                        bind:this={contentElement}
+                        use:enhanceCodeBlocks
+                        class="min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-8"
                     >
-                        {@render children()}
-                    </div>
-                </article>
+                        <div
+                            class="prose-v2 prose max-w-none text-text-primary prose-slate dark:prose-invert prose-headings:scroll-mt-20"
+                        >
+                            {@render children()}
+                        </div>
+                    </article>
+                    {#if pager}
+                        <!-- Pinned to the bottom of the content column by the pager's
+                             own `margin-top: auto`, flush above the footer and not
+                             under the table of contents; `brut-tokens` supplies the
+                             `--brut-*` variables without a background. -->
+                        <div class="brut-tokens not-prose">
+                            {@render pager()}
+                        </div>
+                    {/if}
+                </div>
 
                 <!-- Right sidebar - Table of Contents -->
                 <aside
@@ -262,15 +274,6 @@
                     <TableOfContentsV2 {headings} />
                 </aside>
             </div>
-            {#if pager}
-                <!-- Pinned to the bottom of the main column by the pager's own
-                     `margin-top: auto`; `brut-tokens` supplies the `--brut-*`
-                     variables without a background so the strip sits on the
-                     docs shell surface. -->
-                <div class="brut-tokens not-prose">
-                    {@render pager()}
-                </div>
-            {/if}
         </main>
     </div>
     <FooterV2 {version} />
