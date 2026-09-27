@@ -16,6 +16,7 @@
    - External links keep their ↗ marker; lucide icons stay but at 12px.
 -->
 <script lang="ts">
+    import { keepsCase } from '../utils/keep-case.js'
     import { MotionLi, MotionSpan } from '@humanspeak/svelte-motion'
     import ChevronDown from '@lucide/svelte/icons/chevron-down'
     import ExternalLink from '@lucide/svelte/icons/external-link'
@@ -137,7 +138,7 @@
                                 class="dk-sb-link"
                             >
                                 <span class="dk-sb-bar" aria-hidden="true"></span>
-                                <span class="dk-sb-title">{item.title}</span>
+                                <span class="dk-sb-title" class:dk-keep-case={keepsCase(item.title)}>{item.title}</span>
                                 {#if item?.external}
                                     <ExternalLink size={10} class="dk-sb-ext" />
                                 {/if}
@@ -224,6 +225,10 @@
         transition:
             color 0.15s,
             background 0.15s;
+    }
+    /* Identifiers (createColumns, addSortBy) keep their authored case. */
+    .dk-sb-link .dk-keep-case {
+        text-transform: none;
     }
     .dk-sb-link:hover {
         color: var(--foreground);

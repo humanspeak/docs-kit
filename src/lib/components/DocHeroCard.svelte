@@ -14,6 +14,7 @@
    - FIG corner markers + optional SHEET marker mirror the homepage.
 -->
 <script lang="ts">
+    import { keepsCase } from '../utils/keep-case.js'
     interface Cta {
         href: string
         label: string
@@ -50,11 +51,11 @@
         <div class="dk-doc-hero-k">// docs / {slug}</div>
         <h1>
             {#if accent}
-                <span>{title}</span><span class="dk-doc-hero-hilite">&nbsp;{accent}</span><span
+                <span class:dk-keep-case={keepsCase(title)}>{title}</span><span class="dk-doc-hero-hilite">&nbsp;{accent}</span><span
                     class="dk-doc-hero-end">.</span
                 >
             {:else}
-                <span>{title}</span><span class="dk-doc-hero-end">.</span>
+                <span class:dk-keep-case={keepsCase(title)}>{title}</span><span class="dk-doc-hero-end">.</span>
             {/if}
         </h1>
         <p class="dk-doc-hero-sub">{tagline}</p>
@@ -122,6 +123,10 @@
         text-transform: lowercase;
         margin: 8px 0 0;
         color: var(--foreground);
+    }
+    /* Identifier titles (createColumns) keep their authored case. */
+    .dk-doc-hero h1 .dk-keep-case {
+        text-transform: none;
     }
     .dk-doc-hero-hilite {
         color: var(--color-brand-500, var(--brand-500, var(--accent)));

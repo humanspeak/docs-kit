@@ -69,6 +69,7 @@ export {
 } from './utils/compare-load.js'
 export { fetchOtherProjects } from './utils/fetchOtherProjects.js'
 export { extractHeadings, type TocHeading } from './utils/headings.js'
+export { keepsCase } from './utils/keep-case.js'
 export { getDocsTitleByPath, isActivePath } from './utils/nav.js'
 export { cn } from './utils/shadcn.js'
 

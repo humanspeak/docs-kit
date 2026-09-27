@@ -39,6 +39,10 @@
     text-transform: lowercase;
     color: var(--foreground);
 }
+/* Code inside a heading is an identifier or a signature; its case is meaning. */
+.prose-v2 :is(h1, h2, h3, h4, h5, h6) code {
+    text-transform: none;
+}
 .prose-v2 h1 {
     font-size: 2.4em;
     line-height: 1.05;

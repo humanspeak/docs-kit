@@ -10,6 +10,7 @@
    - Indentation by heading level via the `--toc-indent` step.
 -->
 <script lang="ts">
+    import { keepsCase } from '../utils/keep-case.js'
     import { afterNavigate } from '$app/navigation'
     import { untrack } from 'svelte'
     import type { TocHeading } from '../utils/headings.js'
@@ -121,7 +122,7 @@
                         class="dk-toc-btn"
                     >
                         <span class="dk-toc-bar" aria-hidden="true"></span>
-                        <span class="dk-toc-text">{heading.text}</span>
+                        <span class="dk-toc-text" class:dk-keep-case={keepsCase(heading.text)}>{heading.text}</span>
                     </button>
                 </li>
             {/each}
@@ -171,6 +172,10 @@
         letter-spacing: -0.005em;
         cursor: pointer;
         transition: color 0.15s;
+    }
+    /* Identifiers and signatures keep their authored case. */
+    .dk-toc-btn .dk-keep-case {
+        text-transform: none;
     }
     .dk-toc-btn:hover {
         color: var(--foreground);
