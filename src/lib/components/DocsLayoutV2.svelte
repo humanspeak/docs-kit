@@ -2,7 +2,7 @@
   @component
   Brutalist-mono docs shell (v2).
 
-  Wraps the full HeaderV2 + DocSlugStrip + SidebarV2 + article + TableOfContentsV2 + FooterV2
+  Wraps the full HeaderV2 + DocSlugStrip + SidebarV2 + article + TableOfContentsV2 + optional pager + FooterV2
   layout that every Humanspeak docs site re-implements by hand. The boilerplate that previously
   lived in each consumer's `/docs/+layout.svelte` — breadcrumbs setup, TechArticle JSON-LD per
   page, optional FAQPage JSON-LD on the root, headings extraction with `afterNavigate` refresh
@@ -67,6 +67,12 @@
         faqRoute?: string
         sitemapManifest?: Record<string, string>
         children: Snippet
+        /**
+         * Optional prev/next strip (typically `PagerV2`), rendered full-width at the
+         * bottom of the main column, flush above the footer, with the brutalist
+         * tokens available but no separate background.
+         */
+        pager?: Snippet
     }
 
     const {
@@ -83,7 +89,8 @@
         faqs,
         faqRoute = '/docs',
         sitemapManifest,
-        children
+        children,
+        pager
     }: Props = $props()
 
     const breadcrumbContext = getBreadcrumbContext()
@@ -233,8 +240,8 @@
         </aside>
 
         <!-- Main content area -->
-        <main class="min-w-0 flex-1">
-            <div class="flex min-w-0">
+        <main class="flex min-w-0 flex-1 flex-col">
+            <div class="flex min-w-0 flex-1">
                 <!-- Content -->
                 <article
                     bind:this={contentElement}
@@ -255,6 +262,15 @@
                     <TableOfContentsV2 {headings} />
                 </aside>
             </div>
+            {#if pager}
+                <!-- Pinned to the bottom of the main column by the pager's own
+                     `margin-top: auto`; `brut-tokens` supplies the `--brut-*`
+                     variables without a background so the strip sits on the
+                     docs shell surface. -->
+                <div class="brut-tokens not-prose">
+                    {@render pager()}
+                </div>
+            {/if}
         </main>
     </div>
     <FooterV2 {version} />

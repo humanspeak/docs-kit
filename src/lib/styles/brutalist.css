@@ -26,7 +26,8 @@
  */
 
 .brut-wrap,
-.brut {
+.brut,
+.brut-tokens {
     --brut-bg: #f8fcfb;
     --brut-bg-2: #eef4f1;
     --brut-ink: #0a0a0a;
@@ -44,6 +45,10 @@
     background: var(--brut-bg);
 }
 
+/* `.brut-tokens` exposes the same tokens without painting a background, for
+   brutalist pieces (PagerV2) hosted on a non-brutalist surface such as the
+   docs shell, so they inherit the host background instead of clashing. */
+
 .brut {
     background: var(--brut-bg);
     color: var(--brut-ink);
@@ -53,7 +58,8 @@
 }
 
 html.dark .brut-wrap,
-html.dark .brut {
+html.dark .brut,
+html.dark .brut-tokens {
     --brut-bg: #06090a;
     --brut-bg-2: #0d1110;
     --brut-ink: #ededed;
