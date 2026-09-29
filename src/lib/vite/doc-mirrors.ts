@@ -7,9 +7,7 @@
  * is written at the path that matches its route, so the mirror of
  * `/docs/guides/setup` is served at `https://<site>/docs/guides/setup.md` —
  * the URL `llmsPlugin` advertises and the one an agent derives by appending
- * `.md` to a page URL. The historical flat name (`/docs/guides-setup.md`) is
- * written as well, so links published before the nested form existed keep
- * resolving. Mirrors are the dominant citation surface for ChatGPT,
+ * `.md` to a page URL. Mirrors are the dominant citation surface for ChatGPT,
  * Perplexity, and other LLM crawlers (Tailwind / shadcn / Astro all ship the
  * same pattern).
  *
@@ -254,22 +252,18 @@ function buildMarkdown(args: {
     return headerLines.join('\n') + '\n' + cleanedBody
 }
 
-/** Output paths (relative to the mirrors dir) for one page: the path that
- *  matches the page's route, plus the flat legacy name when it differs.
+/** Output path (relative to the mirrors dir) for one page: the page's route
+ *  below the docs root, plus `.md`.
  *
- *  `guides-setup` (from `guides/setup`) → `guides/setup.md`, `guides-setup.md`
- *  `overview`                           → `overview.md`
- *  `_index`                             → `index.md`
+ *  `<docsRoot>/guides/setup/+page.svx` → `guides/setup.md`
+ *  `<docsRoot>/overview/+page.svx`     → `overview.md`
+ *  `<docsRoot>/+page.svx`              → `index.md`
  */
-function mirrorOutputs(file: string, docsRoot: string, pageFile: string): string[] {
-    const slug = toSlug(file, docsRoot, pageFile)
-    if (slug === '_index') return ['index.md']
+function mirrorOutput(file: string, docsRoot: string, pageFile: string): string {
     const escaped = pageFile.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     const stripRe = new RegExp(`/?${escaped}$`, 'i')
     const rel = toPosix(file.replace(docsRoot, '')).replace(stripRe, '').replace(/^\/+/, '')
-    const nested = `${rel}.md`
-    const flat = `${slug}.md`
-    return nested === flat ? [flat] : [nested, flat]
+    return rel === '' ? 'index.md' : `${rel}.md`
 }
 
 /** Write `next` to `outPath` unless the file already holds it. */
@@ -299,12 +293,7 @@ async function writeMirror(
     const { fm, rest } = parseFrontmatter(raw)
     const routePath = toRoutePath(file, docsRoot, opts.pageFile, opts.docsDir)
     const next = buildMarkdown({ slug, fm, body: rest, routePath, siteUrl: opts.siteUrl })
-    const results = await Promise.all(
-        mirrorOutputs(file, docsRoot, opts.pageFile).map((name) =>
-            writeIfChanged(join(outputAbs, name), next)
-        )
-    )
-    return results.some(Boolean)
+    return writeIfChanged(join(outputAbs, mirrorOutput(file, docsRoot, opts.pageFile)), next)
 }
 
 /** Wipe + regenerate every mirror. Used at `buildStart` so stale slugs from
@@ -380,15 +369,13 @@ export function docMirrorsPlugin(userOptions: DocMirrorsOptions): Plugin {
             const onUnlink = async (file: string) => {
                 const abs = relative('', file) ? resolvePath(file) : file
                 if (!isWatched(abs)) return
-                // Easiest correct path: re-derive the outputs, delete
-                // them. Faster than a full regenerate and avoids the
-                // race window where a stale mirror survives until the next
+                // Easiest correct path: re-derive the output, delete it.
+                // Faster than a full regenerate and avoids the race
+                // window where a stale mirror survives until the next
                 // restart.
-                await Promise.all(
-                    mirrorOutputs(abs, docsAbs, opts.pageFile).map((name) =>
-                        rm(join(outputAbs, name), { force: true })
-                    )
-                )
+                await rm(join(outputAbs, mirrorOutput(abs, docsAbs, opts.pageFile)), {
+                    force: true
+                })
             }
 
             server.watcher.on('add', onChange)

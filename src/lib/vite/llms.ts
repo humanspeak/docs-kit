@@ -10,7 +10,7 @@
  *
  * Inputs (both produced by sibling docs-kit plugins):
  *   - `src/lib/sitemap-manifest.json`  (from `sitemapManifestPlugin`)
- *   - `static/docs/<slug>.md`          (from `docMirrorsPlugin`)
+ *   - `static/docs/<path>.md`          (from `docMirrorsPlugin`, one per route)
  *   - `static/examples*.md`            (from `exampleMirrorsPlugin`, optional)
  *   - comparison records supplied in `comparisons` (optional)
  *
@@ -173,15 +173,6 @@ async function readInsert(rel: string, root: string, label: 'prepend' | 'append'
     }
 }
 
-/** Map a `/docs/...` route to the flat slug `docMirrorsPlugin` writes.
- *  Mirrors the rule that plugin uses: nested paths get hyphenated and
- *  `/docs` itself becomes `_index`. */
-function routeToSlug(route: string): string {
-    const rel = route.replace(/^\/docs\/?/, '').replace(/^\/+|\/+$/g, '')
-    if (rel === '') return '_index'
-    return rel.replace(/\//g, '-')
-}
-
 /** URL path of the mirror `docMirrorsPlugin` writes for a docs route: the
  *  route plus `.md`, except the docs root, whose mirror is `index.md`. */
 function docMirrorPath(route: string): string {
@@ -197,11 +188,31 @@ function slugToTitle(slug: string): string {
         .join(' ')
 }
 
-/** Read the H1 from a per-page mirror; fall back to slug-derived title. */
-async function readMirrorTitle(mirrorsAbs: string, slug: string): Promise<string> {
-    const name = slug === '_index' ? 'index.md' : `${slug}.md`
-    const path = join(mirrorsAbs, name)
-    return readMarkdownTitle(path, slugToTitle(slug))
+/** Path of a route's mirror relative to the mirrors dir: `guides/setup.md`
+ *  for `/docs/guides/setup`, `index.md` for `/docs`. */
+function mirrorFileFor(route: string): string {
+    return docMirrorPath(route).replace(/^\/docs\//, '')
+}
+
+/** Read the H1 from a per-page mirror; fall back to a title derived from
+ *  the last route segment. */
+async function readMirrorTitle(mirrorsAbs: string, route: string): Promise<string> {
+    const file = mirrorFileFor(route)
+    const lastSegment = file.replace(/\.md$/, '').split('/').pop() ?? 'index'
+    return readMarkdownTitle(join(mirrorsAbs, file), slugToTitle(lastSegment))
+}
+
+/** Every `.md` file under `dir`, as posix paths relative to it, sorted. */
+async function findMarkdown(dir: string, prefix = ''): Promise<string[]> {
+    const entries = await readdir(dir, { withFileTypes: true })
+    const found = await Promise.all(
+        entries.map(async (entry) => {
+            const rel = prefix === '' ? entry.name : `${prefix}/${entry.name}`
+            if (entry.isDirectory()) return findMarkdown(join(dir, entry.name), rel)
+            return entry.name.endsWith('.md') ? [rel] : []
+        })
+    )
+    return found.flat().sort()
 }
 
 /** Read the H1 from a markdown file; fall back when the file is missing or
@@ -223,7 +234,7 @@ async function readMarkdownTitle(path: string, fallback: string): Promise<string
 async function loadDocRoutes(
     manifestAbs: string,
     mirrorsAbs: string
-): Promise<Array<{ route: string; slug: string }>> {
+): Promise<Array<{ route: string }>> {
     if (existsSync(manifestAbs)) {
         try {
             const raw = await readFile(manifestAbs, 'utf8')
@@ -231,21 +242,16 @@ async function loadDocRoutes(
             return Object.keys(manifest)
                 .filter((r) => r === '/docs' || r.startsWith('/docs/'))
                 .sort()
-                .map((route) => ({ route, slug: routeToSlug(route) }))
+                .map((route) => ({ route }))
         } catch {
             /* fall through */
         }
     }
     if (!existsSync(mirrorsAbs)) return []
-    const files = await readdir(mirrorsAbs)
+    const files = await findMarkdown(mirrorsAbs)
     return files
-        .filter((f) => f.endsWith('.md'))
-        .map((f) => f.replace(/\.md$/, ''))
-        .sort()
-        .map((slug) => ({
-            slug: slug === 'index' ? '_index' : slug,
-            route: slug === 'index' ? '/docs' : `/docs/${slug.replace(/-/g, '/')}`
-        }))
+        .map((file) => file.replace(/\.md$/, ''))
+        .map((path) => ({ route: path === 'index' ? '/docs' : `/docs/${path}` }))
 }
 
 async function loadExampleEntries(
@@ -288,10 +294,9 @@ async function buildIndex(opts: ResolvedOptions): Promise<string> {
         readInsert(opts.prepend, opts.root, 'prepend'),
         readInsert(opts.append, opts.root, 'append'),
         Promise.all(
-            routes.map(async ({ route, slug }) => ({
+            routes.map(async ({ route }) => ({
                 route,
-                slug,
-                title: await readMirrorTitle(mirrorsAbs, slug)
+                title: await readMirrorTitle(mirrorsAbs, route)
             }))
         ),
         loadExampleEntries(opts)

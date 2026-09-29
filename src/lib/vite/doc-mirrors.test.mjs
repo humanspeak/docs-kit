@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
 
-import { docMirrorsPlugin, llmsPlugin } from '../../../dist/vite/index.js'
+import { docMirrorsPlugin, llmsFullPlugin, llmsPlugin } from '../../../dist/vite/index.js'
 
 const SITE = 'https://example.test'
 
@@ -52,11 +52,31 @@ test('a nested page is mirrored at the path that matches its route', async () =>
     assert.match(await readFile(nested, 'utf8'), /docs\/guides\/moving-to-current/)
 })
 
-test('the flat legacy name is still written with identical content', async () => {
+test('no flat hyphenated copy is written', async () => {
     const root = await project()
-    const nested = await readFile(join(root, 'static/docs/api/body-cell.md'), 'utf8')
-    const flat = await readFile(join(root, 'static/docs/api-body-cell.md'), 'utf8')
-    assert.equal(flat, nested)
+    assert.ok(existsSync(join(root, 'static/docs/api/body-cell.md')))
+    assert.equal(existsSync(join(root, 'static/docs/api-body-cell.md')), false)
+    assert.equal(existsSync(join(root, 'static/docs/guides-moving-to-current.md')), false)
+})
+
+test('llms-full.txt includes nested mirrors exactly once', async () => {
+    const root = await project()
+    await runBuildStart(llmsFullPlugin({ root, siteUrl: SITE, pkgName: '@example/ours' }))
+    const full = await readFile(join(root, 'static/llms-full.txt'), 'utf8')
+    assert.equal(full.match(/^# Moving to current$/gm)?.length, 1)
+    assert.equal(full.match(/^# BodyCell$/gm)?.length, 1)
+    assert.match(full, /^# Overview$/m)
+})
+
+test('llms.txt discovers nested mirrors without a sitemap manifest', async () => {
+    const root = await project()
+    await writeFile(join(root, 'src/lib/sitemap-manifest.json'), 'not json')
+    await runBuildStart(llmsPlugin({ root, siteUrl: SITE, pkgName: '@example/ours' }))
+    const index = await readFile(join(root, 'static/llms.txt'), 'utf8')
+    assert.match(
+        index,
+        /\[Moving to current\]\(https:\/\/example\.test\/docs\/guides\/moving-to-current\.md\)/
+    )
 })
 
 test('single-segment pages and the docs root keep one file each', async () => {

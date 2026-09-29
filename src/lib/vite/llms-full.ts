@@ -12,7 +12,7 @@
  * full dump serve different consumers.
  *
  * Inputs:
- *   - `static/docs/<slug>.md`  (from `docMirrorsPlugin`)
+ *   - `static/docs/<path>.md`  (from `docMirrorsPlugin`, one per route)
  *   - `static/compare/*.md`    (from `llmsPlugin`, optional)
  *
  * Output (gitignored — regenerated at `buildStart`):
@@ -128,14 +128,27 @@ async function readInsert(rel: string, root: string, label: 'prepend' | 'append'
     }
 }
 
-/** Read every `.md` file under `mirrorsAbs` in slug-sorted order. Returns
+/** Absolute paths of every `.md` file under `dir`, including nested
+ *  folders (doc mirrors follow their routes), sorted by relative path. */
+async function findMarkdown(dir: string, prefix = ''): Promise<string[]> {
+    const entries = await readdir(dir, { withFileTypes: true })
+    const found = await Promise.all(
+        entries.map(async (entry) => {
+            const rel = prefix === '' ? entry.name : `${prefix}/${entry.name}`
+            if (entry.isDirectory()) return findMarkdown(join(dir, entry.name), rel)
+            return entry.name.endsWith('.md') ? [rel] : []
+        })
+    )
+    return found.flat().sort()
+}
+
+/** Read every `.md` file under `mirrorsAbs` in path-sorted order. Returns
  *  an empty array (rather than throwing) when the directory doesn't
  *  exist yet — lets the plugin be a safe default in starter templates. */
 async function readMirrors(mirrorsAbs: string): Promise<string[]> {
     if (!existsSync(mirrorsAbs)) return []
-    const files = await readdir(mirrorsAbs)
-    const md = files.filter((f) => f.endsWith('.md')).sort()
-    return Promise.all(md.map((f) => readFile(join(mirrorsAbs, f), 'utf8')))
+    const files = await findMarkdown(mirrorsAbs)
+    return Promise.all(files.map((f) => readFile(join(mirrorsAbs, f), 'utf8')))
 }
 
 async function buildFull(opts: ResolvedOptions): Promise<string> {
