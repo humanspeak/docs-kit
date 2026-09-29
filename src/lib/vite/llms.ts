@@ -182,6 +182,13 @@ function routeToSlug(route: string): string {
     return rel.replace(/\//g, '-')
 }
 
+/** URL path of the mirror `docMirrorsPlugin` writes for a docs route: the
+ *  route plus `.md`, except the docs root, whose mirror is `index.md`. */
+function docMirrorPath(route: string): string {
+    const trimmed = route.replace(/\/+$/, '')
+    return trimmed === '/docs' ? '/docs/index.md' : `${trimmed}.md`
+}
+
 /** Sentence-case fallback when no H1 is available: `api-table` → `Api Table`. */
 function slugToTitle(slug: string): string {
     return slug
@@ -299,7 +306,7 @@ async function buildIndex(opts: ResolvedOptions): Promise<string> {
     }
     lines.push(
         `Canonical docs root: ${opts.siteUrl}/docs`,
-        `Per-page markdown mirrors: ${opts.siteUrl}/docs/<slug>.md`,
+        `Per-page markdown mirrors: append .md to any docs URL (${opts.siteUrl}/docs/<path>.md)`,
         `Full reference (single document): ${opts.siteUrl}/llms-full.txt`,
         '',
         '## Documentation',
@@ -310,7 +317,9 @@ async function buildIndex(opts: ResolvedOptions): Promise<string> {
         // The `:` separator is what llmstxt.org specifies for link notes.
         // Both URLs are useful — the .md is the citation surface, the
         // HTML URL is what the LLM should deep-link humans to.
-        lines.push(`- [${e.title}](${opts.siteUrl}${e.route}.md): ${opts.siteUrl}${e.route}`)
+        lines.push(
+            `- [${e.title}](${opts.siteUrl}${docMirrorPath(e.route)}): ${opts.siteUrl}${e.route}`
+        )
     }
     if (exampleEntries.length > 0) {
         lines.push(

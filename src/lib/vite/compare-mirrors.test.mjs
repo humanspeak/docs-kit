@@ -158,6 +158,6 @@ test('omitting comparisons preserves the existing llms output shape', async () =
     )
     assert.equal(
         await readFile(join(root, 'static/llms.txt'), 'utf8'),
-        '# @example/ours\n\nCanonical docs root: https://example.test/docs\nPer-page markdown mirrors: https://example.test/docs/<slug>.md\nFull reference (single document): https://example.test/llms-full.txt\n\n## Documentation\n\n'
+        '# @example/ours\n\nCanonical docs root: https://example.test/docs\nPer-page markdown mirrors: append .md to any docs URL (https://example.test/docs/<path>.md)\nFull reference (single document): https://example.test/llms-full.txt\n\n## Documentation\n\n'
     )
 })

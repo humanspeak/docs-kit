@@ -3,10 +3,15 @@
  *
  * Walks `src/routes/docs/**` for `+page.svx` files, strips Svelte-specific
  * syntax (script blocks, component tags) while preserving fenced code
- * blocks, and writes clean Markdown to `static/docs/<slug>.md`. The result
- * is served verbatim at `https://<site>/docs/<slug>.md` — the dominant
- * citation surface for ChatGPT, Perplexity, and other LLM crawlers
- * (Tailwind / shadcn / Astro all ship the same pattern).
+ * blocks, and writes clean Markdown mirrors under `static/docs/`. Every page
+ * is written at the path that matches its route, so the mirror of
+ * `/docs/guides/setup` is served at `https://<site>/docs/guides/setup.md` —
+ * the URL `llmsPlugin` advertises and the one an agent derives by appending
+ * `.md` to a page URL. The historical flat name (`/docs/guides-setup.md`) is
+ * written as well, so links published before the nested form existed keep
+ * resolving. Mirrors are the dominant citation surface for ChatGPT,
+ * Perplexity, and other LLM crawlers (Tailwind / shadcn / Astro all ship the
+ * same pattern).
  *
  * Why a Vite plugin (replacing the prior per-consumer `.mjs` script):
  *  - Initial generation hooks into `buildStart`, so it fires for both
@@ -34,7 +39,7 @@
  */
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
-import { join, relative, resolve as resolvePath, sep } from 'node:path'
+import { dirname, join, relative, resolve as resolvePath, sep } from 'node:path'
 import type { Plugin, ViteDevServer } from 'vite'
 
 export interface DocMirrorsOptions {
@@ -249,7 +254,39 @@ function buildMarkdown(args: {
     return headerLines.join('\n') + '\n' + cleanedBody
 }
 
-/** Process a single file and write its mirror. Returns true if the on-disk
+/** Output paths (relative to the mirrors dir) for one page: the path that
+ *  matches the page's route, plus the flat legacy name when it differs.
+ *
+ *  `guides-setup` (from `guides/setup`) → `guides/setup.md`, `guides-setup.md`
+ *  `overview`                           → `overview.md`
+ *  `_index`                             → `index.md`
+ */
+function mirrorOutputs(file: string, docsRoot: string, pageFile: string): string[] {
+    const slug = toSlug(file, docsRoot, pageFile)
+    if (slug === '_index') return ['index.md']
+    const escaped = pageFile.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const stripRe = new RegExp(`/?${escaped}$`, 'i')
+    const rel = toPosix(file.replace(docsRoot, '')).replace(stripRe, '').replace(/^\/+/, '')
+    const nested = `${rel}.md`
+    const flat = `${slug}.md`
+    return nested === flat ? [flat] : [nested, flat]
+}
+
+/** Write `next` to `outPath` unless the file already holds it. */
+async function writeIfChanged(outPath: string, next: string): Promise<boolean> {
+    if (existsSync(outPath)) {
+        try {
+            if ((await readFile(outPath, 'utf8')) === next) return false
+        } catch {
+            /* fall through and write */
+        }
+    }
+    await mkdir(dirname(outPath), { recursive: true })
+    await writeFile(outPath, next, 'utf8')
+    return true
+}
+
+/** Process a single file and write its mirrors. Returns true if the on-disk
  *  content changed (so HMR can decide whether to broadcast). */
 async function writeMirror(
     file: string,
@@ -261,23 +298,13 @@ async function writeMirror(
     const raw = await readFile(file, 'utf8')
     const { fm, rest } = parseFrontmatter(raw)
     const routePath = toRoutePath(file, docsRoot, opts.pageFile, opts.docsDir)
-    const outName = slug === '_index' ? 'index.md' : `${slug}.md`
-    const outPath = join(outputAbs, outName)
     const next = buildMarkdown({ slug, fm, body: rest, routePath, siteUrl: opts.siteUrl })
-
-    let current = ''
-    if (existsSync(outPath)) {
-        try {
-            current = await readFile(outPath, 'utf8')
-        } catch {
-            /* fall through and write */
-        }
-    }
-    if (current === next) return false
-
-    await mkdir(outputAbs, { recursive: true })
-    await writeFile(outPath, next, 'utf8')
-    return true
+    const results = await Promise.all(
+        mirrorOutputs(file, docsRoot, opts.pageFile).map((name) =>
+            writeIfChanged(join(outputAbs, name), next)
+        )
+    )
+    return results.some(Boolean)
 }
 
 /** Wipe + regenerate every mirror. Used at `buildStart` so stale slugs from
@@ -345,7 +372,7 @@ export function docMirrorsPlugin(userOptions: DocMirrorsOptions): Plugin {
                 if (changed) {
                     // Mirrors are static assets; nothing in the dev module
                     // graph imports them. A full reload isn't needed —
-                    // the next fetch of `/docs/<slug>.md` will pick up
+                    // the next fetch of the page's `.md` URL will pick up
                     // the new content directly from disk.
                 }
             }
@@ -353,16 +380,15 @@ export function docMirrorsPlugin(userOptions: DocMirrorsOptions): Plugin {
             const onUnlink = async (file: string) => {
                 const abs = relative('', file) ? resolvePath(file) : file
                 if (!isWatched(abs)) return
-                // Easiest correct path: re-derive the slug, delete its
-                // mirror. Faster than a full regenerate and avoids the
-                // race window where a stale slug survives until the next
+                // Easiest correct path: re-derive the outputs, delete
+                // them. Faster than a full regenerate and avoids the
+                // race window where a stale mirror survives until the next
                 // restart.
-                const slug = toSlug(abs, docsAbs, opts.pageFile)
-                const outName = slug === '_index' ? 'index.md' : `${slug}.md`
-                const outPath = join(outputAbs, outName)
-                if (existsSync(outPath)) {
-                    await rm(outPath, { force: true })
-                }
+                await Promise.all(
+                    mirrorOutputs(abs, docsAbs, opts.pageFile).map((name) =>
+                        rm(join(outputAbs, name), { force: true })
+                    )
+                )
             }
 
             server.watcher.on('add', onChange)
