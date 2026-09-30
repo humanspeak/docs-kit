@@ -53,7 +53,9 @@ export function createCompareSlugLoad(competitors: Competitor[]): CompareSlugLoa
             return {
                 competitor,
                 title: `vs ${competitor.name}`,
-                description: competitor.description
+                // The page-level meta description: the short search snippet
+                // when one is set, not the long overview paragraph.
+                description: competitor.seoDescription ?? competitor.description
             }
         }
     }
