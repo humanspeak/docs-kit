@@ -49,6 +49,10 @@
         getStartedHref?: string
         /** Masthead secondary link. Default `/examples`. */
         examplesHref?: string
+        /** Masthead secondary link text. Default `examples`. A descriptive
+         *  label (e.g. `dynamic height example`) makes a better internal link
+         *  when `examplesHref` points at one specific example. */
+        examplesLabel?: string
         /** Big-type footer CTA. */
         footerCta?: CompareFooterCta
         /** Whether to emit Article JSON-LD into <svelte:head>. Default true. */
@@ -63,6 +67,7 @@
         ours,
         getStartedHref = '/docs',
         examplesHref = '/examples',
+        examplesLabel = 'examples',
         footerCta,
         emitJsonLd = true,
         ogFeatures = ['Feature Comparison', 'Pros & Cons', 'Migration Guide', 'Honest Verdict']
@@ -77,7 +82,7 @@
     const applySeo = () => {
         if (!seo) return
         seo.title = competitor.seoTitle ?? `${competitor.name} vs ${ours.name} | Compare`
-        seo.description = competitor.description
+        seo.description = competitor.seoDescription ?? competitor.description
         seo.h1 = undefined
         seo.ogTitle = `vs ${competitor.name}`
         seo.ogTagline = competitor.tagline
@@ -93,7 +98,7 @@
             '@context': 'https://schema.org',
             '@type': 'Article',
             headline: `${ours.name} vs ${competitor.name}`,
-            description: competitor.description,
+            description: competitor.seoDescription ?? competitor.description,
             author: { '@type': 'Organization', name: 'Humanspeak', url: 'https://humanspeak.com' },
             publisher: {
                 '@type': 'Organization',
@@ -202,7 +207,7 @@
             <p class="sub">{competitor.tagline}</p>
             <div class="cta-row">
                 <a class="pri" href={getStartedHref}>get started ↗</a>
-                <a href={examplesHref}>examples</a>
+                <a href={examplesHref}>{examplesLabel}</a>
                 <a href="/compare">all comparisons</a>
             </div>
         </div>

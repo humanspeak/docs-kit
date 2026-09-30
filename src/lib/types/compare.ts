@@ -53,6 +53,12 @@ export interface Competitor {
      * `<name> vs <ours> | Compare`.
      */
     seoTitle?: string
+    /**
+     * Optional override for the meta description and JSON-LD description.
+     * `description` doubles as the overview paragraph, which is usually too
+     * long for a search snippet (~155 characters). Defaults to `description`.
+     */
+    seoDescription?: string
 }
 
 /**
