@@ -1,0 +1,13 @@
+{
+    "files": {
+        ".github/scripts/calver-release.mjs": "323d9c692a449383410e267dee5e00b29e3a6f7a1b8a20bc9c26f87d973bb73f",
+        ".github/scripts/calver-release.test.mjs": "5ad6c3bfb830df8ba656815a0748f47bf20f0d878e5fa1f1811bdc278ed3b132",
+        ".github/scripts/release-publication.mjs": "c03d90062b6fcb38e11f9bb4cb5fd8c9a14a34a56bb67870f64d81af43f56e8e",
+        ".github/scripts/release-publication.test.mjs": "a6176fdcf61b0d118670ce1d43a09f39a12d4171e1ab6fed7960dfe048145ebf",
+        ".github/scripts/release-workflow.test.mjs": "7a9e393cad156ac86e19b4b6aa1c72afedd5a6012652c6459e288f501ab43609",
+        ".github/workflows/release.yml": "194fa090c71821afac12674ed0b78228c18ce82d5a4757b56301aaecd5af0b10",
+        ".github/workflows/run-tests.yml": "5bb1940c60ed3857c313a221f32c208d537302852a2d4ea706337380ff40a1f4"
+    },
+    "repository": "humanspeak/svelte-diff",
+    "revision": "23ff1d373da36e28c13d41280571101be0e14a4e"
+}

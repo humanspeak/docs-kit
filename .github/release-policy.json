@@ -1,0 +1,7 @@
+{
+    "manager": "pnpm",
+    "event": "calver",
+    "manifests": ["package.json"],
+    "lockfile": null,
+    "readme": "unchanged"
+}
