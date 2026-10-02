@@ -127,6 +127,20 @@ class SyncTests(unittest.TestCase):
                     self.assertNotIn('git push --tags', text)
                     self.assertNotIn('gh release delete', text)
 
+    def test_existing_consumer_migrates_runner_state_out_of_job_environment(self):
+        policy = self.policy()
+        text = sync.harden(legacy(), policy)
+        initialization = sync.fragment('state') + '\n'
+        invalid = text.replace(initialization, '').replace(
+            '            PREPARED_SHA:',
+            '            RELEASE_STATE: ${{ runner.temp }}/release-${{ github.run_id }}-${{ github.run_attempt }}.json\n'
+            '            PREPARED_SHA:')
+        corrected = sync.harden(invalid, policy)
+        self.assertEqual(corrected, text)
+        self.assertNotIn('${{ runner.temp }}', corrected)
+        self.assertEqual(corrected.count('Initialize release state path'), 1)
+        self.assertEqual(sync.harden(corrected, policy), corrected)
+
     def test_generated_ci_uses_version_tags_and_has_no_whitespace_only_lines(self):
         for manager in ['npm', 'pnpm']:
             with self.subTest(manager=manager), tempfile.TemporaryDirectory(prefix='release-sync-') as directory:
