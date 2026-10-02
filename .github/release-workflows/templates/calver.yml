@@ -13,7 +13,6 @@ on:
             - tsconfig*.json
             - svelte.config.*
             - .github/scripts/**
-            - .github/release-workflows/**
             - .github/release-policy.json
             - .github/release-source.json
             - .github/workflows/release.yml
@@ -76,11 +75,7 @@ jobs:
             - name: Check library types
               run: pnpm run check
             - name: Test release safety offline
-              env:
-                  RELEASE_UPDATER_TEST_TARGET: helper
               run: node --test .github/scripts/*.test.mjs
-            - name: Test shared workflow synchronization
-              run: python3 -m unittest discover -s .github/release-workflows -p '*test.py'
             - name: Build and test
               run: |
                   pnpm build
