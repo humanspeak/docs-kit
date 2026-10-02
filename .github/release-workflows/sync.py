@@ -115,7 +115,23 @@ def type_gate(text, manager, offline):
     return ''.join(lines)
 
 
+def initialize_release_state(text):
+    match = re.search(r'^    publish-github-packages:\n[\s\S]*?(?=^    [a-z][\w-]*:\n|\Z)', text, re.M)
+    if not match:
+        raise ValueError('Missing publication job')
+    job = match.group(0)
+    # Runner contexts are available in steps, not jobs.<job_id>.env.
+    job = job.replace('            RELEASE_STATE: ${{ runner.temp }}/release-${{ github.run_id }}-${{ github.run_attempt }}.json\n', '')
+    if '            - name: Initialize release state path\n' not in job:
+        job = once(job, '        steps:\n', '        steps:\n' + fragment('state') + '\n')
+    return once(text, match.group(0), job)
+
+
 def harden(text, policy):
+    return initialize_release_state(harden_workflow(text, policy))
+
+
+def harden_workflow(text, policy):
     manager = policy['manager']
     text = text.replace('# Release safety managed by humanspeak/svelte-diff .github/release-workflows/sync.py\n', HEADER)
     if HEADER in text:
@@ -184,7 +200,6 @@ def harden(text, policy):
                 else:
                     chunk = re.sub(r'^        if: (.+)$', r"        if: needs.debug-check.result == 'success' && \1", chunk, count=1, flags=re.M)
             chunk = once(chunk, '        permissions:\n', '        env:\n'
-                         '            RELEASE_STATE: ${{ runner.temp }}/release-${{ github.run_id }}-${{ github.run_attempt }}.json\n'
                          '            PREPARED_SHA: ${{ needs.prepare.outputs.checkout_sha }}\n        permissions:\n')
         chunk = re.sub(r'(uses: actions/checkout@[^\n]+\n              with:\n)',
                        r'\1                  ref: ${{ needs.prepare.outputs.checkout_sha }}\n', chunk)
