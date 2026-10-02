@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { env } from 'node:process'
 import test from 'node:test'
 import { fileURLToPath, URL } from 'node:url'
 import { selectBaseline, validateMetadata } from './release-publication.mjs'
@@ -29,7 +30,7 @@ test('release state is initialized on the runner outside checkout and isolated b
             execFileSync('/bin/bash', ['--noprofile', '--norc', '-eu', '-c', script], {
                 cwd: root,
                 env: {
-                    PATH: process.env.PATH,
+                    PATH: env.PATH,
                     RUNNER_TEMP: directory,
                     GITHUB_ENV: environment,
                     GITHUB_RUN_ID: '12345',
