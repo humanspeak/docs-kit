@@ -12,21 +12,15 @@ on:
             - src/**
             - tests/**
             - package.json
-            - pnpm-lock.yaml
+            - __LOCKFILE__
             - tsconfig*.json
             - svelte.config.*
             - vite.config.*
             - vitest.config.*
             - .github/scripts/**
-            - .github/release-workflows/**
             - .github/release-policy.json
             - .github/release-source.json
             - .github/workflows/run-tests.yml
-            - pnpm-workspace.yaml
-            - vitest.setup.*
-            - playwright.config.*
-            - eslint.config.*
-            - .npmrc
 
 concurrency:
     group: run-tests-${{ github.ref }}
@@ -37,26 +31,22 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                node-version: [22, 24]
+                node-version: __NODE_MATRIX__
         steps:
             - uses: actions/checkout@v7 # zizmor: ignore[unpinned-uses]
               with:
                   persist-credentials: false
-            - uses: pnpm/action-setup@v6 # zizmor: ignore[unpinned-uses]
+            # __MANAGER_SETUP__
             - uses: actions/setup-node@v7 # zizmor: ignore[unpinned-uses]
               with:
                   node-version: ${{ matrix.node-version }}
             - name: Install
-              run: pnpm install --frozen-lockfile --ignore-scripts
+              run: __INSTALL__
             - name: Check library types
-              run: pnpm run check
+              run: __MANAGER__ run check
             - name: Test release safety offline
-              env:
-                  RELEASE_UPDATER_TEST_TARGET: helper
               run: node --test .github/scripts/*.test.mjs
-            - name: Test shared workflow synchronization
-              run: python3 -m unittest discover -s .github/release-workflows -p '*test.py'
             - name: Build and test
               run: |
-                  pnpm run build
-                  pnpm run test
+                  __MANAGER__ run build
+                  __MANAGER__ run test
