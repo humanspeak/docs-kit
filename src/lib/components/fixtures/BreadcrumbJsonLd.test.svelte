@@ -4,10 +4,10 @@
     import { type BreadcrumbContext, setBreadcrumbContext } from '../../contexts/breadcrumb.js'
     import BreadcrumbJsonLd from '../BreadcrumbJsonLd.svelte'
 
-    const { context, config } = $props<{
+    const { context, config }: {
         context?: BreadcrumbContext
         config: DocsKitConfig
-    }>()
+    } = $props()
 
     untrack(() => {
         if (context) setBreadcrumbContext(context)

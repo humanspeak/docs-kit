@@ -1,4 +1,4 @@
-import type { Handle } from '@sveltejs/kit'
+import type { Handle } from '@sveltejs/kit/hooks'
 
 export interface SentryConfig {
     dsn: string | undefined
@@ -25,7 +25,7 @@ export interface ClientSentryConfig {
  * Usage in hooks.client.ts:
  * ```ts
  * import { createClientSentryInit } from '@humanspeak/docs-kit/hooks'
- * import type { HandleClientError } from '@sveltejs/kit'
+ * import type { HandleClientError } from '@sveltejs/kit/hooks'
  *
  * export const handleError: HandleClientError = ({ error }) => {
  *     console.error(error)

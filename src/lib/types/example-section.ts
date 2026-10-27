@@ -15,7 +15,7 @@
  *     type ExampleSection,
  *     type DemoManifestEntry
  *   } from '@humanspeak/docs-kit'
- *   import manifestJson from '$lib/demo-manifest.json'
+ *   import manifestJson from '#lib/demo-manifest.json'
  *
  *   const manifest = manifestJson as Record<string, DemoManifestEntry>
  *   const sections: ExampleSection[] = [{ figId: 'FIG-001', title: { accent: 'demo' }, ... }]

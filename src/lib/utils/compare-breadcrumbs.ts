@@ -41,7 +41,7 @@ const defaultFallback = (slug: string): string =>
  *
  * ```ts
  * import { buildCompareBreadcrumbs } from '@humanspeak/docs-kit'
- * import { getCompetitor } from '$lib/compare-data'
+ * import { getCompetitor } from '#lib/compare-data'
  *
  * const breadcrumbResolver = (pathname: string) =>
  *     buildCompareBreadcrumbs(pathname, { getCompetitor })

@@ -16,12 +16,12 @@
         license = 'MIT',
         version,
         year = new Date().getFullYear()
-    } = $props<{
+    }: {
         extra?: Snippet
         license?: string
         version?: string
         year?: number
-    }>()
+    } = $props()
 </script>
 
 <footer class="dk-footer-v2 border-t border-border bg-background text-foreground">

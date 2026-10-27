@@ -14,9 +14,9 @@
   ```svelte
   <script lang="ts">
     import { BlogLayoutV2 } from '@humanspeak/docs-kit/blog'
-    import { docsConfig } from '$lib/docs-config'
-    import { headerNav } from '$lib/docsNav'
-    import favicon from '$lib/assets/logo.svg'
+    import { docsConfig } from '#lib/docs-config'
+    import { headerNav } from '#lib/docsNav'
+    import favicon from '#lib/assets/logo.svg'
     import { version } from '../../../package.json'
     const { children } = $props()
   </script>

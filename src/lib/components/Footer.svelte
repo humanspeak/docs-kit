@@ -3,9 +3,9 @@
     import HeartIcon from '@lucide/svelte/icons/heart'
     import { MotionSpan } from '@humanspeak/svelte-motion'
 
-    const { extra } = $props<{
+    const { extra }: {
         extra?: Snippet
-    }>()
+    } = $props()
 </script>
 
 <footer

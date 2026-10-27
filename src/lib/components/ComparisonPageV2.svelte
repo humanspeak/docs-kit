@@ -13,7 +13,7 @@
   ```svelte
   <script lang="ts">
     import { ComparisonPageV2 } from '@humanspeak/docs-kit'
-    import { competitors, getCompetitor } from '$lib/compare-data'
+    import { competitors, getCompetitor } from '#lib/compare-data'
     import type { PageData } from './$types'
 
     const { data }: { data: PageData } = $props()
@@ -121,7 +121,7 @@
                     '@type': 'SoftwareApplication',
                     name: competitor.name,
                     applicationCategory: 'DeveloperApplication',
-                    ...(competitor.website ? { url: competitor.website } : {})
+                    ...(competitor.website ? { url: competitor.website }: {})
                 }
             ],
             keywords: competitor.keywords

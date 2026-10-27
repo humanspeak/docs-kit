@@ -12,7 +12,7 @@
   ```svelte
   <script lang="ts">
     import { BlogPostV2, type BlogPostMeta } from '@humanspeak/docs-kit/blog'
-    import { docsConfig } from '$lib/docs-config'
+    import { docsConfig } from '#lib/docs-config'
     const post: BlogPostMeta = { … }
   </script>
 

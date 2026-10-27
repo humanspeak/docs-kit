@@ -1,25 +1,25 @@
 <script lang="ts">
-    import { page } from '$app/stores'
+    import { page } from '$app/state'
     import type { DocsKitConfig } from '../config.js'
     import type { SeoContext } from '../contexts/seo.js'
 
-    const { seo, config, favicon } = $props<{
+    const { seo, config, favicon }: {
         seo: SeoContext
         config: DocsKitConfig
         favicon?: string
-    }>()
+    } = $props()
 
     // Build URLs against the configured site origin rather than
-    // `$page.url.origin`. During SvelteKit prerender, the latter resolves to
+    // `page.url.origin`. During SvelteKit prerender, the latter resolves to
     // the sentinel `http://sveltekit-prerender`, which SvelteKit rewrites in
     // `<link href>` attributes but NOT inside `<meta content="...">` — so
     // og:image / twitter:image leaked the placeholder into production HTML
     // and broke social previews. Trailing slash is stripped defensively so
     // consumers can configure `url` with or without one.
     const siteOrigin = $derived(config.url.replace(/\/+$/, ''))
-    const canonicalUrl = $derived(`${siteOrigin}${$page.url.pathname}`)
-    const pageTitle = $derived($page.data?.title as string | undefined)
-    const pageDesc = $derived($page.data?.description as string | undefined)
+    const canonicalUrl = $derived(`${siteOrigin}${page.url.pathname}`)
+    const pageTitle = $derived(page.data?.title as string | undefined)
+    const pageDesc = $derived(page.data?.description as string | undefined)
 
     const resolvedTitle = $derived(
         seo.title ??

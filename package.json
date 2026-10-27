@@ -79,7 +79,7 @@
         "@humanspeak/svelte-markdown": ">=1.0.0",
         "@humanspeak/svelte-motion": ">=0.1.0",
         "@lucide/svelte": ">=0.400.0",
-        "@sveltejs/kit": "^2.0.0",
+        "@sveltejs/kit": "^3.0.0",
         "mode-watcher": "^1.0.0",
         "shiki": ">=3.0.0",
         "svelte": "^5.0.0"

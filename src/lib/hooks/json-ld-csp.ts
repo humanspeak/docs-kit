@@ -1,6 +1,6 @@
 import { createHash } from 'crypto'
 
-import type { Handle } from '@sveltejs/kit'
+import type { Handle } from '@sveltejs/kit/hooks'
 
 // Matches inline <script> tags (with or without attributes, but NOT those with src="...")
 const INLINE_SCRIPT_REGEX = /<script(?![^>]*\bsrc\s*=)[^>]*>([\s\S]*?)<\/script>/g

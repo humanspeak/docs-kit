@@ -1,5 +1,4 @@
-import type { Handle } from '@sveltejs/kit'
-import { sequence } from '@sveltejs/kit/hooks'
+import { sequence, type Handle } from '@sveltejs/kit/hooks'
 
 import { createJsonLdCspHandle } from './json-ld-csp.js'
 import { createSecurityHeadersHandle } from './security-headers.js'

@@ -2,7 +2,7 @@
     import type { DocsKitConfig } from '../config.js'
     import { getBreadcrumbContext } from '../contexts/breadcrumb.js'
 
-    const { config } = $props<{ config: DocsKitConfig }>()
+    const { config }: { config: DocsKitConfig } = $props()
 
     const breadcrumbs = getBreadcrumbContext()
 
@@ -17,7 +17,7 @@
                     '@type': 'ListItem',
                     position: i + 2,
                     name: b.title,
-                    ...(b.href ? { item: `${config.url}${b.href}` } : {})
+                    ...(b.href ? { item: `${config.url}${b.href}` }: {})
                 }))
         ]
         return `<${'script'} type="application/ld+json">${JSON.stringify({

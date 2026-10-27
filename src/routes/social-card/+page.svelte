@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { OG, type DocsKitConfig } from '$lib'
-    import '$lib/styles/fonts.css'
+    import { OG, type DocsKitConfig } from '../../lib/index.js'
+    import '../../lib/styles/fonts.css'
 
     const docsConfig: DocsKitConfig = {
         name: 'Svelte Motion',

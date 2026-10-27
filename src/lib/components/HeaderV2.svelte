@@ -41,12 +41,12 @@
         external?: boolean
     }
 
-    const { config, favicon, nav, version } = $props<{
+    const { config, favicon, nav, version }: {
         config: DocsKitConfig
         favicon: string
         nav?: NavLink[]
         version?: string
-    }>()
+    } = $props()
 
     const breadcrumbContext = getBreadcrumbContext()
     const EMPTY_BREADCRUMBS: readonly import('../contexts/breadcrumb.js').Breadcrumb[] = []

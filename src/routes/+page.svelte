@@ -4,9 +4,9 @@
         EmbeddedExampleV2,
         ExampleV2,
         enhanceCodeBlocks
-    } from '$lib'
-    import '$lib/styles/brutalist.css'
-    import '$lib/styles/prose-v2.css'
+    } from '../lib/index.js'
+    import '../lib/styles/brutalist.css'
+    import '../lib/styles/prose-v2.css'
 
     const codeSample = `import { animate } from '@humanspeak/svelte-motion'
 

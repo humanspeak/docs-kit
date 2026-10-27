@@ -15,7 +15,7 @@
     import { untrack } from 'svelte'
     import type { TocHeading } from '../utils/headings.js'
 
-    const { headings = [] } = $props<{ headings: TocHeading[] }>()
+    const { headings = [] }: { headings: TocHeading[] } = $props()
 
     let activeHeading = $state<string>('')
 

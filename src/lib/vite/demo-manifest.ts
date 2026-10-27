@@ -69,7 +69,7 @@ export interface DemoManifestOptions {
     examplesDir?: string
     /** Output manifest path (relative to `root`). Default:
      *  `src/lib/demo-manifest.json`. Keep it inside `src/lib/` so consumer
-     *  pages can import it via the `$lib/` alias. */
+     *  pages can import it via the `#lib/` alias. */
     output?: string
     /** Emit a lightweight index instead of the historical full manifest.
      *  Heavy code + Shiki HTML payloads are served as virtual modules:
@@ -891,7 +891,7 @@ export function demoManifestPlugin(userOptions: DemoManifestOptions = {}): Plugi
     // re-resolve, invocations from outside the project — e.g.
     // `pnpm --filter docs dev` running vite from the workspace root —
     // would land the manifest at `<workspace>/src/lib/...` instead of
-    // `<project>/src/lib/...`, and any `import '$lib/demo-manifest.json'`
+    // `<project>/src/lib/...`, and any `import '#lib/demo-manifest.json'`
     // would fail to find a file the plugin had actually written.
     let examplesAbs = resolvePath(opts.root, opts.examplesDir)
     let outputAbs = resolvePath(opts.root, opts.output)

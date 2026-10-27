@@ -20,8 +20,8 @@ the SVG there to preserve crisp branding. Name that import `logo` in new sites:
 ```svelte
 <script lang="ts">
     import { RootLayout, HeaderV2 } from '@humanspeak/docs-kit'
-    import logo from '$lib/assets/logo.svg'
-    import { docsConfig } from '$lib/docs-config'
+    import logo from '#lib/assets/logo.svg'
+    import { docsConfig } from '#lib/docs-config'
 
     const { children } = $props()
 </script>

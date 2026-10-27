@@ -49,7 +49,7 @@
                       license: 'https://opensource.org/licenses/MIT',
                       keywords: config.keywords,
                       // A private repo's URLs are 404s for visitors — omit them.
-                      ...(config.hideGithub ? {} : { releaseNotes: `${repoUrl}/releases` }),
+                      ...(config.hideGithub ? {}: { releaseNotes: `${repoUrl}/releases` }),
                       ...(config.programmingLanguages
                           ? { programmingLanguage: config.programmingLanguages }
                           : {}),

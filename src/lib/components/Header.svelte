@@ -8,7 +8,7 @@
     import NpmIcon from './icons/NpmIcon.svelte'
     import ThemeToggle from './ThemeToggle.svelte'
 
-    const { config, favicon } = $props<{ config: DocsKitConfig; favicon: string }>()
+    const { config, favicon }: { config: DocsKitConfig; favicon: string } = $props()
 
     const breadcrumbContext = getBreadcrumbContext()
 

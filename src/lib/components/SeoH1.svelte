@@ -1,9 +1,9 @@
 <script lang="ts">
     import type { SeoContext } from '../contexts/seo.js'
 
-    const { seo } = $props<{
+    const { seo }: {
         seo: SeoContext
-    }>()
+    } = $props()
 
     const h1 = $derived(seo.h1)
     const isVisible = $derived(h1?.mode === 'visible')

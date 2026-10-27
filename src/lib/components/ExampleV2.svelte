@@ -169,7 +169,7 @@
     // split-shape object. The plain-string form becomes the accent span
     // with a trailing period — same default the homepage uses.
     const titleShape = $derived.by<TitleShape>(() =>
-        typeof title === 'string' ? { accent: title, end: '.' } : { end: '.', ...title }
+        typeof title === 'string' ? { accent: title, end: '.' }: { end: '.', ...title }
     )
 
     // Derive the file name from the source URL when the consumer
